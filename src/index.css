@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/*
+@font-face {
+    font-family: "Chalet";
+    src: url("../fonts/ChaletParisNineteenEighty10021.otf");
+}
+*/
