@@ -1,3 +1,176 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+RegisterByInvitation is activated by the the user clicking on the email
+sent to them by the API which includes a token that enables them to register
+for an account on the system.
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {reactive, ref, onBeforeMount} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {useRoute} from "vue-router";
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
+import BaseInput from "../ui/BaseInput.vue";
+import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
+import BaseButton from "../ui/BaseButton.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useAuthService from "../../services/useAuthService";
+import useErrorService from "../../services/useErrorService.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+import {object, string, ref as yref} from "yup";
+import {useField, useForm} from "vee-validate";
+import useMiscService from "../../services/misc/useMiscService.js";
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage {
+    title: string,
+    description: string
+}
+
+const route = useRoute();
+const {registerUser, callUserAPI} = useAuthService()
+const {errorMessageHandler} = useErrorService()
+const {retrieveInvitation, revokeInvitation} = useMiscService()
+
+let registerMessage: GenericMessage = reactive({
+    title: "",
+    description: ""
+})
+let errorMessage: GenericMessage = reactive({
+    title: "",
+    description: ""
+})
+const userRegistered = ref(false)
+const invitationValid = ref(false)
+const invitation_email = ref('')
+
+let invitationToken = reactive({})
+invitationToken = route.query.token
+
+const form = reactive({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    password_confirmation: ''
+})
+
+/*
+Set up the vee-validate validation schema
+ */
+const validationSchema = object({
+    first_name: string().required('Please enter your first name'),
+    last_name: string().required('Please enter your last name'),
+    email: string().email('Invalid email format').required('An email address is required'),
+    password: string().required('Please enter your password'),
+    password_confirmation: string().required('Please confirm your password').oneOf([yref('password')], 'Passwords do not match'),
+
+})
+/*
+Define functional components to be used by vee-validate 'useForm'
+ */
+const {handleSubmit, setFieldError, errors} = useForm({
+    validationSchema
+})
+
+/*
+Define the fieldset to be validated by vee-validate
+ */
+const {value: first_name} = useField('first_name', {validateOnValueUpdate: false})
+const {value: last_name} = useField('last_name', {validateOnValueUpdate: false})
+const {value: email, handleChange} = useField('email', {validateOnValueUpdate: false})
+const {value: password} = useField('password', {validateOnValueUpdate: false})
+const {value: password_confirmation} = useField('password_confirmation', {validateOnValueUpdate: false})
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+/*
+validate whether there is a token attached to the invitation.
+if there is...
+    retrieve the invitation
+    check if the expire date has passed...
+        if it's in date...
+            carry on processing...
+ */
+onBeforeMount(async () => {
+    if (!invitationToken) {
+        errorMessage.title = "Invalid Invitation"
+        errorMessage.description = "The invitation credentials are invalid. Please request another invitation."
+    } else {
+        try {
+            let response = await retrieveInvitation(invitationToken)
+            let expireDate = new Date(response.data.expires_at)
+            let currentDate = new Date()
+            if (currentDate > expireDate) {
+                errorMessage.title = "Invalid Invitation"
+                errorMessage.description = "This invitation has expired. Please request another invitation."
+            } else {
+                invitationValid.value = true
+                invitation_email.value = response.data.email
+            }
+        } catch (e) {
+            errorMessage = await errorMessageHandler(e)
+        }
+    }
+})
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+/*
+Validate the input registration details
+if the registration is valid...
+    register the user
+    retrieve their details
+    revoke the invitation as it is no longer needed
+ */
+const onSubmit = handleSubmit(async (values) => {
+    if (email.value !== invitation_email.value) {
+        setFieldError('email', 'This email address does not correspond to this invitation. Please request another invitation.')
+    } else {
+        try {
+            await registerUser(values)
+            await callUserAPI
+            await revokeInvitation(invitationToken)
+            registerMessage.title = 'Registration Successful'
+            registerMessage.description = 'Congratulations, you are now registered. Please check your email box for your verification email. Once verified you will be able to sign into your account.'
+            userRegistered.value = true
+        } catch (e) {
+            errorMessage = await errorMessageHandler(e)
+        }
+    }
+})
+</script>
 <template>
     <div class="bg-black min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -8,7 +181,6 @@
             <h2 class="mt-6 text-center text-2xl font-extrabold text-cyan-500">Register your account</h2>
             <p class="mt-2 text-center text-sm text-gray-300">
                 Already registered?
-
                 <router-link
                       class="font-medium text-teal-300 hover:text-teal-600"
                       to="/login">sign in to your account
@@ -123,180 +295,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-RegisterByInvitation is activated by the the user clicking on the email
-sent to them by the API which includes a token that enables them to register
-for an account on the system.
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {reactive, ref, onBeforeMount} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-import {useRoute} from "vue-router";
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
-import BaseInput from "../ui/BaseInput.vue";
-import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
-import BaseButton from "../ui/BaseButton.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useAuthService from "../../services/useAuthService";
-import useErrorService from "../../services/useErrorService.js";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-import {object, string, ref as yref} from "yup";
-import {useField, useForm} from "vee-validate";
-import useMiscService from "../../services/misc/useMiscService.js";
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-const route = useRoute();
-const {registerUser, callUserAPI} = useAuthService()
-const {errorMessageHandler} = useErrorService()
-const {retrieveInvitation, revokeInvitation} = useMiscService()
-
-const registerMessage = reactive({})
-const userRegistered = ref(false)
-const invitationValid = ref(false)
-const invitation_email = ref('')
-const errorMessage = ref({})
-let invitationToken = reactive()
-invitationToken = route.query.token
-
-const form = reactive({
-    first_name: '',
-    last_name: '',
-    email: '',
-    password: '',
-    password_confirmation: ''
-})
-
-/*
-Set up the vee-validate validation schema
- */
-const validationSchema = object({
-    first_name: string().required('Please enter your first name'),
-    last_name: string().required('Please enter your last name'),
-    email: string().email('Invalid email format').required('An email address is required'),
-    password: string().required('Please enter your password'),
-    password_confirmation: string().required('Please confirm your password').oneOf([yref('password')], 'Passwords do not match'),
-
-})
-/*
-Define functional components to be used by vee-validate 'useForm'
- */
-const {handleSubmit, flgIsSubmitting, setFieldError, errors} = useForm({
-    validationSchema
-})
-
-/*
-Define the fieldset to be validated by vee-validate
- */
-const {value: first_name} = useField('first_name', {validateOnValueUpdate: false})
-const {value: last_name} = useField('last_name', {validateOnValueUpdate: false})
-const {value: email, handleChange} = useField('email', {validateOnValueUpdate: false})
-const {value: password} = useField('password', {validateOnValueUpdate: false})
-const {value: password_confirmation} = useField('password_confirmation', {validateOnValueUpdate: false})
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Watches
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-/*
-validate whether there is a token attached to the invitation.
-if there is...
-    retrieve the invitation
-    check if the expire date has passed...
-        if it's in date...
-            carry on processing...
- */
-onBeforeMount(async () => {
-    if (!invitationToken) {
-        errorMessage.value.title = "Invalid Invitation"
-        errorMessage.value.description = "The invitation credentials are invalid. Please request another invitation."
-    } else {
-        try {
-            let response = await retrieveInvitation(invitationToken)
-            let expireDate = new Date(response.data.expires_at)
-            let currentDate = new Date()
-            if ((expireDate - currentDate) <= 0) {
-                errorMessage.value.title = "Invalid Invitation"
-                errorMessage.value.description = "This invitation has expired. Please request another invitation."
-            } else {
-                invitationValid.value = true
-                invitation_email.value = response.data.email
-            }
-        } catch (e) {
-            errorMessage.value = await errorMessageHandler(e)
-        }
-    }
-
-})
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-/*
-Validate the input registration details
-if the registration is valid...
-    register the user
-    retrieve their details
-    revoke the invitation as it is no longer needed
- */
-const onSubmit = handleSubmit(async (values) => {
-    if (email.value !== invitation_email.value) {
-        setFieldError('email', 'This email address does not correspond to this invitation. Please request another invitation.')
-    } else {
-        try {
-            await registerUser(values)
-            await callUserAPI
-            await revokeInvitation(invitationToken)
-            registerMessage.title = 'Registration Successful'
-            registerMessage.description = 'Congratulations, you are now registered. Please check your email box for your verification email. Once verified you will be able to sign into your account.'
-            userRegistered.value = true
-        } catch (e) {
-            errorMessage.value = await errorMessageHandler(e)
-        }
-    }
-    return {
-        onSubmit,
-        first_name,
-        last_name,
-        email,
-        password,
-        password_confirmation,
-        handleChange,
-        registerMessage
-    }
-})
-</script>
-
-<style scoped>
-
-</style>

@@ -1,3 +1,140 @@
+
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+Provides login facilities for end user
+and initialise authorisation details for user in the authStore
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+/* Vue */
+import {reactive} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {useRouter} from "vue-router";
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
+import BaseInput from "../ui/BaseInput.vue";
+import BaseButton from "../ui/BaseButton.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useAuthService from "../../services/useAuthService.js";
+import useErrorService from "../../services/useErrorService.js";
+import {hasRole} from "../../utils/RolesAndPermissions.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+import {useAuthStore} from "../../stores/AuthStore";
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+import {useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage {
+    title: string,
+    description: string
+}
+const router = useRouter()
+const authStore = useAuthStore()
+const {login,logout} = useAuthService()
+const {errorMessageHandler} = useErrorService()
+let errorMessage:GenericMessage = reactive({
+    title:"",
+    description:""
+})
+/*
+Set up the vee-validate validation items
+*/
+const validationSchema = object({
+    password: string().required('Please enter your password'),
+    email: string().email('Invalid email format').required('An email address is required'),
+})
+const {handleSubmit, isSubmitting, errors} = useForm({
+    validationSchema
+})
+const {value: email, handleChange} = useField('email')
+const {value: password} = useField('password')
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const loginAttempt=async (values)=>{
+    await login(values)
+    if (authStore.isAuthenticated && authStore.isVerified) {
+        if (hasRole(['super admin', 'admin'])) {
+            await router.push({name: "home"})
+        } else {
+            await router.push({name: "user-dashboard"})
+        }
+    } else if (!authStore.isVerified) {
+        await router.push({name: 'verify-email'})
+    }
+}
+/*
+On login attempt
+*/
+const onSubmit = handleSubmit(async values => {
+    /*
+    attempt to login
+    if successful...
+        the login process will have retrieved the user information from the back end
+        and put this into the authStore.
+        If the user is authenticated and verified...
+            we redirect them to the home page.
+        If they are not already verified we route them
+            to the verify email page
+    else, if the login is unsuccessful...
+        output the error to the user
+    */
+    /**
+     * TODO
+     * need to adjust redirects to reflect behaviour for other authorised users
+     * should we decide to implement at some point
+     */
+    try {
+        await loginAttempt(values)
+    } catch (e) {
+        let errorReturned = await errorMessageHandler(e)
+        if(errorReturned.status===419 || errorReturned.status===422){
+            try{
+                await logout()
+                await loginAttempt(values)
+            }catch(e){
+                errorMessage = await errorMessageHandler(e)
+            }
+        }else{
+            errorMessage=errorReturned
+        }
+    }
+})
+</script>
+
 <template>
     <div class="bg-black min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -5,9 +142,7 @@
                  src="/images/agcplogotrsp150x150.png"
                  alt="Agapanthus Consulting"/>
             <h1 class="mt-6 text-center text-3xl font-extrabold text-cyan-600">Agapanthus Consulting</h1>
-
             <h2 class="mt-6 text-center text-2xl font-extrabold text-cyan-500">Sign in to your account</h2>
-
             <!--
 <p class="mt-2 text-center text-sm text-gray-600">
     Or
@@ -51,26 +186,23 @@
                         >
                         </BaseInput>
                     </div>
-
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <input id="remember-me" name="remember-me" type="checkbox"
                                    class="h-4 w-4 text-gray-300 focus:ring-teal-500 border-gray-300 rounded"/>
                             <label for="remember-me" class="ml-2 block text-sm text-gray-400"> Remember me </label>
                         </div>
-
                         <div class="text-sm">
                             <router-link class="font-medium text-teal-500 hover:text-teal-300"
                                          to="/forgot-password">Forgot your password
                             </router-link>
                         </div>
                     </div>
-
                     <div>
                         <BaseButton
                               title="Sign In"
-                              :submitting="flgIsSubmitting"
-                              :disabled="flgIsSubmitting"
+                              :submitting="isSubmitting"
+                              :disabled="isSubmitting"
                         />
                     </div>
                     <BaseErrorMessage
@@ -78,155 +210,8 @@
                           :error-description=errorMessage.description
                           :error-title=errorMessage.title>
                     </BaseErrorMessage>
-
                 </form>
             </div>
         </div>
     </div>
-
 </template>
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-Provides login facilities for end user
-and initialise authorisation details for user in the authStore
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-/* Vue */
-import {ref} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-import {useRouter} from "vue-router";
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
-import BaseInput from "../ui/BaseInput.vue";
-import BaseButton from "../ui/BaseButton.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useAuthService from "../../services/useAuthService.js";
-import useErrorService from "../../services/useErrorService.js";
-import {hasRole} from "../../utils/RolesAndPermissions.js";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-import {useAuthStore} from "../../stores/AuthStore";
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-const router = useRouter()
-const authStore = useAuthStore()
-const {login,logout} = useAuthService()
-const {errorMessageHandler} = useErrorService()
-const errorMessage = ref({})
-/*
-Set up the vee-validate validation items
-*/
-const validationSchema = object({
-    password: string().required('Please enter your password'),
-    email: string().email('Invalid email format').required('An email address is required'),
-})
-const {handleSubmit, flgIsSubmitting, errors} = useForm({
-    validationSchema
-})
-const {value: email, handleChange} = useField('email')
-const {value: password} = useField('password')
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Watches
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-const loginAttempt=async (values)=>{
-    await login(values)
-    if (authStore.isAuthenticated && authStore.isVerified) {
-        if (hasRole(['super admin', 'admin'])) {
-            router.push({name: "home"})
-        } else {
-            router.push({name: "user-dashboard"})
-        }
-    } else if (!authStore.isVerified) {
-        router.push({name: 'verify-email'})
-    }
-}
-/*
-On login attempt
-*/
-const onSubmit = handleSubmit(async values => {
-    /*
-    attempt to login
-    if successful...
-        the login process will have retrieved the user information from the back end
-        and put this into the authStore.
-        If the user is authenticated and verified...
-            we redirect them to the home page.
-        If they are not already verified we route them
-            to the verify email page
-    else, if the login is unsuccessful...
-        output the error to the user
-    */
-    /**
-     * TODO
-     * need to adjust redirects to reflect behaviour for other authorised users
-     * should we decide to implement at some point
-     */
-    try {
-        await loginAttempt(values)
-    } catch (e) {
-        let errorReturned = await errorMessageHandler(e)
-        //console.log(errorReturned)
-        if(errorReturned.status===419 || errorReturned.status===422){
-            //console.log(419)
-            try{
-                await logout()
-                await loginAttempt(values)
-                //console.log("success")
-            }catch(e){
-                //console.log("failed")
-                let errorReturned = await errorMessageHandler(e)
-                errorMessage.value=errorReturned
-            }
-        }else{
-            errorMessage.value=errorReturned
-        }
-    }
-    return {
-        onSubmit,
-        email,
-        password,
-        handleChange,
-        errors
-    }
-})
-
-</script>
-
-<style scoped>
-
-</style>

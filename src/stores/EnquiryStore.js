@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 
-const useEnquiryStore = defineStore('EnquiryStore', {
+export const useEnquiryStore = defineStore('EnquiryStore', {
     state() {
         return {
             enquiry:{},
@@ -10,4 +10,3 @@ const useEnquiryStore = defineStore('EnquiryStore', {
     },
     actions: {}
 })
-export {useEnquiryStore}

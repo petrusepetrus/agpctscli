@@ -25,7 +25,7 @@
     <Footerbar></Footerbar>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {useAuthStore} from "../../stores/AuthStore.js";
 import Navbar from "../../components/layout/Navbar.vue";
 import Footerbar from "/src/components/layout/Footerbar.vue"
@@ -34,7 +34,6 @@ const {user, authenticated, verified} = useAuthStore()
 
 import {defineComponent, h} from 'vue'
 
-import {ArrowTopRightOnSquareIcon, ChevronRightIcon} from '@heroicons/vue/20/solid'
 import Features from "../../components/home/Features.vue";
 import Testimonials from "../../components/home/Testimonials.vue";
 import Methodology from "../../components/home/Methodology.vue";

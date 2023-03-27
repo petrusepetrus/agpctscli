@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 
-const useUserStore = defineStore('UserStore', {
+export const useUserStore = defineStore('UserStore', {
     state() {
         return {
             verified: false,
@@ -25,10 +25,8 @@ const useUserStore = defineStore('UserStore', {
             return state.userPhones
         },
         getUserAddressByID: (state) => {
-            //let userAddressIndex=state.userAddresses.findIndex(userAddresses=>userAddresses.id===id)
             return userAddressId => state.userAddresses.find((userAddress) => userAddress.id === userAddressId)
         },
     },
     actions: {}
 })
-export {useUserStore}

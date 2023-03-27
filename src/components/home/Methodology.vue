@@ -10,7 +10,7 @@
                     and designing a website that meets those requirements.
                 </p>
             </div>
-            <div class="mx-auto mt-12 grid gap-8 px-2 md:px-4 lg:max-w-7xl lg:grid-cols-3 lg:px-8">
+            <div class="mx-auto mt-12 grid gap-8 px-2 md:px-4 lg:max-w-7xl lg:grid-cols-3 md:grid-cols-2 lg:px-8">
                 <div v-for="post in methodologyParts" :key="post.id"
                      class="flex flex-col overflow-hidden rounded-lg shadow-md">
                     <div class="flex-shrink-0">

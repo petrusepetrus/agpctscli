@@ -1,3 +1,131 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+UserReview enables the management of a selected Enquiry
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {reactive, ref} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
+import BaseInput from "../ui/BaseInput.vue";
+import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
+import BaseButton from "../ui/BaseButton.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useAuthService from "../../services/useAuthService";
+import useErrorService from "../../services/useErrorService.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+import {useAuthStore} from "../../stores/AuthStore.js"
+import {storeToRefs} from 'pinia'
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+import {object, string} from "yup";
+import {useField, useForm} from "vee-validate";
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage{
+    title:string,
+    description:string
+}
+const authStore = useAuthStore()
+const {user} = storeToRefs(authStore)
+const {errorMessageHandler}=useErrorService()
+const {registerUser, callUserAPI} = useAuthService()
+
+let registerMessage :GenericMessage=reactive({
+    title:"",
+    description:""
+})
+let errorMessage:GenericMessage=reactive({
+    title:"",
+    description:""
+})
+const userRegistered = ref(false)
+
+const form = reactive({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    password_confirmation: ''
+})
+/*
+Set up the vee-validate validation schema
+ */
+const validationSchema = object({
+    first_name: string().required('Please enter your first name'),
+    last_name: string().required('Please enter your last name'),
+    email: string().email('Invalid email format').required('An email address is required'),
+    password: string().required('Please enter your password'),
+    password_confirmation: string().required('Please confirm your password'),
+
+})
+/*
+Define functional components to be used by vee-validate 'useForm'
+ */
+const {handleSubmit, errors} = useForm({
+    validationSchema
+})
+/*
+Define the fieldset to be validated by vee-validate
+ */
+const {value: first_name} = useField('first_name')
+const {value: last_name} = useField('last_name')
+const {value: email, handleChange} = useField('email')
+const {value: password} = useField('password')
+const {value: password_confirmation} = useField('password_confirmation')
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+/*
+On submit
+Await the registerUser function response
+If there are any errors returned from the registerUser function raise these with vee-validate
+ */
+const onSubmit = handleSubmit(async values => {
+    try {
+        await registerUser(values)
+        await callUserAPI
+        registerMessage.title = 'Congratulations'
+        registerMessage.description='Yyou are now registered. Please check your email box for your verification email. Once verified you will be able to sign into your account.'
+        userRegistered.value = true
+    } catch (e) {
+        errorMessage = await errorMessageHandler(e)
+    }
+})
+</script>
 <template>
     <div class="bg-black min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -117,136 +245,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-UserReview enables the management of a selected Enquiry
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {reactive, ref} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
-import BaseInput from "../ui/BaseInput.vue";
-import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
-import BaseButton from "../ui/BaseButton.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useAuthService from "../../services/useAuthService";
-import useErrorService from "../../services/useErrorService.js";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-import {useAuthStore} from "../../stores/AuthStore.js"
-import {storeToRefs} from 'pinia'
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-import {object, string} from "yup";
-import {useField, useForm} from "vee-validate";
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-const authStore = useAuthStore()
-const {user} = storeToRefs(authStore)
-const {errorMessageHandler}=useErrorService()
-const {registerUser, callUserAPI} = useAuthService()
-
-const registerMessages = ref('')
-const userRegistered = ref(false)
-const errorMessage=reactive({})
-
-const form = reactive({
-    first_name: '',
-    last_name: '',
-    email: '',
-    password: '',
-    password_confirmation: ''
-})
-/*
-Set up the vee-validate validation schema
- */
-const validationSchema = object({
-    first_name: string().required('Please enter your first name'),
-    last_name: string().required('Please enter your last name'),
-    email: string().email('Invalid email format').required('An email address is required'),
-    password: string().required('Please enter your password'),
-    password_confirmation: string().required('Please confirm your password'),
-
-})
-/*
-Define functional components to be used by vee-validate 'useForm'
- */
-const {handleSubmit, flgIsSubmitting, setErrors, errors} = useForm({
-    validationSchema
-})
-/*
-Define the fieldset to be validated by vee-validate
- */
-const {value: first_name} = useField('first_name')
-const {value: last_name} = useField('last_name')
-const {value: email, handleChange} = useField('email')
-const {value: password} = useField('password')
-const {value: password_confirmation} = useField('password_confirmation')
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Watches
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-/*
-On submit
-Await the registerUser function response
-If there are any errors returned from the registerUser function raise these with vee-validate
- */
-const onSubmit = handleSubmit(async values => {
-    try {
-        await registerUser(values)
-        await callUserAPI
-        registerMessages.value = 'Congratulations, you are now registered. Please check your email box for your verification email. Once verified you will be able to sign into your account.'
-        userRegistered.value = true
-    } catch (e) {
-        errorMessage.value = await errorMessageHandler(e)
-    }
-
-    return {
-        onSubmit,
-        first_name,
-        last_name,
-        email,
-        password,
-        password_confirmation,
-        handleChange,
-        registerMessages
-    }
-})
-</script>
-
-<style scoped>
-
-</style>

@@ -1,3 +1,131 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+UserReview enables the management of a selected Enquiry
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {reactive, ref} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {useRoute, useRouter} from 'vue-router'
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseInput from "../ui/BaseInput.vue";
+import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
+import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
+import BaseButton from "../ui/BaseButton.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useAuthService from "../../services/useAuthService";
+import useErrorService from "../../services/useErrorService.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+import {useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage {
+    title: string,
+    description: string
+}
+
+let errorMessage:GenericMessage = reactive({
+    title:"",
+    description:""
+})
+let informationMessage:GenericMessage = reactive({
+    title:"",
+    description:""
+})
+const flgIsSubmitting = ref(false)
+
+const {resetPassword} = useAuthService()
+const route = useRoute()
+const router = useRouter()
+const {errorMessageHandler} = useErrorService()
+
+const form = reactive({
+    email: '',
+    password: '',
+    password_confirmation: '',
+    token: '',
+})
+
+/*
+Set up the validation schema
+ */
+const validationSchema = object({
+    password: string().required('Please enter your password'),
+    password_confirmation: string().required('Please enter your password'),
+    email: string().email('Invalid email format').required('An email address is required'),
+    token: string().required('token must be present')
+})
+const {handleSubmit, errors} = useForm({
+    validationSchema
+})
+const {value: email, handleChange} = useField('email')
+const {value: password} = useField('password')
+const {value: password_confirmation} = useField('password_confirmation')
+const {value: token} = useField('token')
+
+/*
+Initialise the hidden token field to the token value set by Laravel and passed
+back in the /reset-password query parameters
+ */
+token.value = route.query.token
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+/*
+On submit call the resetPassword endpoint
+ */
+const onSubmit = handleSubmit(async form => {
+    try {
+        flgIsSubmitting.value = true
+        await resetPassword(form)
+        informationMessage.title = 'Success'
+        informationMessage.description = 'Your password has been reset.'
+        setTimeout(() => {
+            router.push({name: 'login'})
+        }, 5000);
+        flgIsSubmitting.value = false
+    } catch (e) {
+        //console.log(e)
+        errorMessage = await errorMessageHandler(e)
+        flgIsSubmitting.value = false
+    }
+})
+</script>
 <template>
     <div class="bg-black min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -101,8 +229,8 @@
                               :disabled="flgIsSubmitting"
                         />
                     </div>
-                    {{errorMessage}}
-                    {{informationMessage}}
+                    {{ errorMessage }}
+                    {{ informationMessage }}
                     <BaseErrorMessage
                           v-if="errorMessage.title"
                           :error-description=errorMessage.description
@@ -118,125 +246,3 @@
         </div>
     </div>
 </template>
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-UserReview enables the management of a selected Enquiry
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {reactive,ref} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-import {useRoute,useRouter} from 'vue-router'
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseInput from "../ui/BaseInput.vue";
-import BaseErrorMessage from "../ui/BaseErrorMessage.vue";
-import BaseInformationMessage from "../ui/BaseInformationMessage.vue";
-import BaseButton from "../ui/BaseButton.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useAuthService from "../../services/useAuthService";
-import useErrorService from "../../services/useErrorService.js";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-const {resetPassword} = useAuthService()
-const route = useRoute()
-const router=useRouter()
-const {errorMessageHandler}=useErrorService()
-
-const form = reactive({
-    email: '',
-    password: '',
-    password_confirmation: '',
-    token: '',
-})
-
-/*
-Set up the validation schema
- */
-const validationSchema = object({
-    password: string().required('Please enter your password'),
-    password_confirmation: string().required('Please enter your password'),
-    email: string().email('Invalid email format').required('An email address is required'),
-    token: string().required('token must be present')
-})
-const {handleSubmit,  setErrors, errors} = useForm({
-    validationSchema
-})
-const {value: email, handleChange} = useField('email')
-const {value: password} = useField('password')
-const {value: password_confirmation} = useField('password_confirmation')
-const {value: token} = useField('token')
-const informationMessage = reactive({})
-const flgIsSubmitting=ref(false)
-const errorMessage=ref({})
-/*
-Initialise the hidden token field to the token value set by Laravel and passed
-back in the /reset-password query parameters
- */
-token.value = route.query.token
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Watches
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-/*
-On submit call the resetPassword endpoint
- */
-const onSubmit = handleSubmit(async form => {
-    try {
-        flgIsSubmitting.value=true
-        await resetPassword(form)
-        informationMessage.title = 'Success'
-        informationMessage.description = 'Your password has been reset.'
-        setTimeout(() => {  router.push({name: 'login'}) }, 5000);
-        flgIsSubmitting.value=false
-    } catch (e) {
-        //console.log(e)
-        errorMessage.value = await errorMessageHandler(e)
-        flgIsSubmitting.value=false
-    }
-    return {
-        onSubmit,
-        email,
-        password,
-        password_confirmation,
-        handleChange,
-        informationMessage
-    }
-})
-
-</script>
