@@ -26,7 +26,7 @@
                             </EnquiryReviewWebsiteMaintenanceCard>
                         </div>
                         <div
-                              v-if="enquiryStore.enquiry.enquiry_type.enquiry_type==='Search Engine Optimisation and Ranking'"
+                              v-if="enquiryStore.enquiry.enquiry_type.enquiry_type==='Search Engine Optimisation and Digital Marketing'"
                               class="mt-4">
                             <EnquiryReviewSEOCard>
                             </EnquiryReviewSEOCard>

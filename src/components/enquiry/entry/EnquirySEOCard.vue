@@ -1,3 +1,117 @@
+<script setup lang="ts">
+/* 
+-------------------------------------------------------------------------------
+Imports
+-----------------------------------------------------------------------------*/
+/* Vue  */
+import {ref, watch} from 'vue'
+/* Components */
+import BaseTextarea from "../../ui/BaseTextarea.vue";
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import BaseInput from "../../ui/BaseInput.vue";
+/* Validation */
+import {FieldContext, useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/* Services */
+
+/*
+-------------------------------------------------------------------------------
+Variable definitions
+------------------------------------------------------------------------------ */
+/* refs */
+let formValues = {
+    business_name : "",
+    business_url : "",
+    google_chk : false,
+    you_tube_chk : false,
+    facebook_chk : false,
+    twitter_chk : false,
+    tik_tok_chk : false,
+    linked_in_chk : false,
+    snapchat_chk : false,
+    other_chk : false,
+    other_social_media:"",
+    enquiry : "",
+}
+
+const enquiryCharCount = ref(0)
+const enquiryCharLimit = ref(512)
+
+/* vee-validate schema */
+const validationSchema = object({
+    business_name: string().required('Please enter the business or organisation name'),
+    business_url: string().required('Please enter the business or organisation URL'),
+    enquiry: string().required('Please enter your enquiry'),
+    other_social_media: string().when("other_chk", {
+        is: true,
+        then: string().required("Please enter the other marketing platform(s) being used"),
+    }),
+
+
+})
+const {validate, errors, values} = useForm({
+    validationSchema
+})
+let {value: business_name}: FieldContext<string> = useField('business_name')
+let {value: business_url}: FieldContext<string> = useField('business_url')
+let {value: enquiry}: FieldContext<string> = useField('enquiry')
+let {value: google_chk}: FieldContext<boolean> = useField('google_chk')
+let {value: you_tube_chk}: FieldContext<boolean> = useField('you_tube_chk')
+let {value: facebook_chk}: FieldContext<boolean> = useField('facebook_chk')
+let {value: twitter_chk}: FieldContext<boolean> = useField('twitter_chk')
+let {value: tik_tok_chk}: FieldContext<boolean> = useField('tik_tok_chk')
+let {value: linked_in_chk}: FieldContext<boolean> = useField('linked_in_chk')
+let {value: snapchat_chk}: FieldContext<boolean> = useField('snapchat_chk')
+let {value: other_chk}: FieldContext<boolean> = useField('other_chk')
+let {value: other_social_media}: FieldContext<string> = useField('other_social_media')
+
+/*
+explicitly expose the vaildateForm function so that it can be called by the parent component
+ */
+defineExpose({
+    validateForm,
+    formValues
+})
+
+watch(enquiry, () => {
+    enquiryCharCount.value = enquiry.value.length
+})
+
+
+/*
+-------------------------------------------------------------------------------
+Functions
+-------------------------------------------------------------------------------*/
+async function validateForm() {
+
+    const {valid} = await validate()
+    //console.dir(valid)
+    //console.dir(errors)
+    if (valid) {
+        //console.log("yes")
+
+        formValues.business_name = business_name.value
+        formValues.business_url = business_url.value
+        formValues.google_chk = google_chk.value
+        formValues.you_tube_chk = you_tube_chk.value
+        formValues.facebook_chk = facebook_chk.value
+        formValues.twitter_chk = twitter_chk.value
+        formValues.tik_tok_chk = tik_tok_chk.value
+        formValues.linked_in_chk = linked_in_chk.value
+        formValues.snapchat_chk = snapchat_chk.value
+        formValues.other_chk = other_chk.value
+        formValues.other_social_media=other_social_media.value
+        formValues.enquiry = enquiry.value
+
+    } else {
+        console.log("SEO failed")
+    }
+    return {
+        valid,
+        formValues
+    }
+}
+</script>
 <template>
     <form
           novalidate class="bg-black col-span-2 mt-2">
@@ -187,112 +301,4 @@
 
         </div>
     </form>
-
-
 </template>
-
-<script setup>
-/* 
--------------------------------------------------------------------------------
-Imports
------------------------------------------------------------------------------*/
-/* Vue  */
-import {ref, watch} from 'vue'
-/* Components */
-import BaseTextarea from "../../ui/BaseTextarea.vue";
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import BaseInput from "../../ui/BaseInput.vue";
-/* Validation */
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/* Services */
-
-/*
--------------------------------------------------------------------------------
-Variable definitions
------------------------------------------------------------------------------- */
-/* refs */
-let formValues = {}
-
-const enquiryCharCount = ref(0)
-const enquiryCharLimit = ref(512)
-
-/* vee-validate schema */
-const validationSchema = object({
-    business_name: string().required('Please enter the business or organisation name'),
-    business_url: string().required('Please enter the business or organisation URL'),
-    enquiry: string().required('Please enter your enquiry'),
-    other_social_media: string().when("other_chk", {
-        is: true,
-        then: string().required("Please enter the other marketing platform(s) being used"),
-    }),
-
-
-})
-const {validate, errors, values} = useForm({
-    validationSchema
-})
-let {value: business_name} = useField('business_name')
-let {value: business_url} = useField('business_url')
-let {value: enquiry} = useField('enquiry')
-let {value: google_chk} = useField('google_chk')
-let {value: you_tube_chk} = useField('you_tube_chk')
-let {value: facebook_chk} = useField('facebook_chk')
-let {value: twitter_chk} = useField('twitter_chk')
-let {value: tik_tok_chk} = useField('tik_tok_chk')
-let {value: linked_in_chk} = useField('linked_in_chk')
-let {value: snapchat_chk} = useField('snapchat_chk')
-let {value: other_chk} = useField('other_chk')
-let {value: other_social_media} = useField('other_social_media')
-
-/*
-explicitly expose the vaildateForm function so that it can be called by the parent component
- */
-defineExpose({
-    validateForm,
-    formValues
-})
-
-watch(enquiry, () => {
-    enquiryCharCount.value = enquiry.value.length
-})
-
-
-/*
--------------------------------------------------------------------------------
-Functions
--------------------------------------------------------------------------------*/
-async function validateForm() {
-
-    const {valid} = await validate()
-    //console.dir(valid)
-    //console.dir(errors)
-    if (valid) {
-        //console.log("yes")
-
-        formValues.business_name = business_name.value
-        formValues.business_url = business_url.value
-        formValues.google_chk = google_chk.value
-        formValues.you_tube_chk = you_tube_chk.value
-        formValues.facebook_chk = facebook_chk.value
-        formValues.twitter_chk = twitter_chk.value
-        formValues.tik_tok_chk = tik_tok_chk.value
-        formValues.linked_in_chk = linked_in_chk.value
-        formValues.snapchat_chk = snapchat_chk.value
-        formValues.other_chk = other_chk.value
-        formValues.other_social_media=other_social_media.value
-        formValues.enquiry = enquiry.value
-
-    } else {
-        //console.log("SEO failed")
-    }
-    return {
-        valid,
-        formValues
-    }
-}
-</script>
-
-<style scoped>
-
-</style>

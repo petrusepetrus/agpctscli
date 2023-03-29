@@ -1,63 +1,4 @@
-<template>
-    <form novalidate class="p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500" @submit="onSubmit">
-        <p class="my-4 text-sm text-gray-400">
-            Please {{ editMode }} your comment in the form below and either save when ready or cancel to go back
-        </p>
-        <div class="mt-4">
-            <BaseTextarea
-                  v-model="enquiry_comment"
-                  label="Enquiry Comment"
-                  name="enquiry_comment"
-                  placeholder="Please enter your comment"
-                  :required="true"
-                  :rows="8"
-                  :character-limit="enquiryCommentCharLimit"
-                  :character-count="enquiryCommentCharCount"
-                  :error="errors.enquiry"
-                  :label-class="'block text-md text-gray-300'"
-                  :char-limit-class="'text-sm text-gray-400'"
-            >
-            </BaseTextarea>
-        </div>
-
-    <div class="mt-2 flex items-center flex-wrap sm:flex-nowrap">
-        <div class="mr-2">
-            <BaseButton
-                  v-if="isDirty"
-                  title="Save"
-                  type="'submit'"
-                  :submitting="isSubmitting"
-                  :disabled="isSubmitting"
-            />
-        </div>
-        <div class="mr-2">
-            <BaseButton
-                  title="Cancel"
-                  :submitting="isSubmitting"
-                  :disabled="isSubmitting"
-                  @click="onCancel"
-            />
-        </div>
-    </div>
-    </form>
-    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
-        <BaseInformationMessage v-if="updateMessage.title">
-            {{ updateMessages }}
-        </BaseInformationMessage>
-    </div>
-
-    <div
-          v-if="errorMessage.title"
-          class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
-        <BaseErrorMessage
-              :error-description=errorMessage.description
-              :error-title=errorMessage.title>
-        </BaseErrorMessage>
-    </div>
-
-</template>
-
-<script setup>
+<script setup lang="ts">
 /* Overview
 -------------------------------------------------------------------------------
 UserReview enables the management of a selected Enquiry
@@ -95,7 +36,7 @@ const enquiryStore = useEnquiryStore()
 /*-------------------------------------------------------------------------------*/
 /* Validation
 /*-------------------------------------------------------------------------------*/
-import {useField, useForm, useIsFormDirty} from 'vee-validate'
+import {FieldContext, useField, useForm, useIsFormDirty} from 'vee-validate'
 import {object, string} from 'yup'
 import {testIfPromise} from "../../../utils/GeneralUtilities.js";
 /*===============================================================================*/
@@ -125,12 +66,22 @@ const emit = defineEmits(['cancelled', 'updated'])
 /*===============================================================================*/
 /* Variable Declaration and Initialisation
 /*===============================================================================*/
-let errorMessage = reactive({})
-const updateMessage = reactive({})
+interface GenericMessage {
+    title: string,
+    description: string
+}
+let errorMessage:GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+const updateMessage:GenericMessage = reactive({
+    title:"",
+    description:"",
+})
 const enquiryCommentCharCount = ref(0)
 const enquiryCommentCharLimit = ref(256)
 const enquiryComment = ref("")
-let enquiryCommentID = ref("")
+let enquiryCommentID = ref(0)
 let editMode = ref("")
 
 /*
@@ -179,7 +130,7 @@ Track whether the form is dirty
  */
 const isDirty = useIsFormDirty()
 
-let {value: enquiry_comment} = useField('enquiry_comment')
+let {value: enquiry_comment}:FieldContext<string> = useField('enquiry_comment')
 /*===============================================================================*/
 /* Watches
 /*===============================================================================*/
@@ -209,6 +160,7 @@ const onSubmit = handleSubmit(async (values) => {
             emit('updated')
         } catch (e) {
             if (testIfPromise(e)) {
+                console.log("oops")
                 e.then((value) => {
                     /*
                 The error handler throws a promise.reject so we need to resolve the promise
@@ -259,7 +211,58 @@ const onCancel = async () => {
     emit("cancelled")
 }
 </script>
-
-<style scoped>
-
-</style>
+<template>
+    <form novalidate class="p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500" @submit="onSubmit">
+        <p class="my-4 text-sm text-gray-400">
+            Please {{ editMode }} your comment in the form below and either save when ready or cancel to go back
+        </p>
+        <div class="mt-4">
+            <BaseTextarea
+                  v-model="enquiry_comment"
+                  label="Enquiry Comment"
+                  name="enquiry_comment"
+                  placeholder="Please enter your comment"
+                  :required="true"
+                  :rows="8"
+                  :character-limit="enquiryCommentCharLimit"
+                  :character-count="enquiryCommentCharCount"
+                  :error="errors.enquiry"
+                  :label-class="'block text-md text-gray-300'"
+                  :char-limit-class="'text-sm text-gray-400'"
+            >
+            </BaseTextarea>
+        </div>
+        <div class="mt-2 flex items-center flex-wrap sm:flex-nowrap">
+            <div class="mr-2">
+                <BaseButton
+                      v-if="isDirty"
+                      title="Save"
+                      type="'submit'"
+                      :submitting="isSubmitting"
+                      :disabled="isSubmitting"
+                />
+            </div>
+            <div class="mr-2">
+                <BaseButton
+                      title="Cancel"
+                      :submitting="isSubmitting"
+                      :disabled="isSubmitting"
+                      @click="onCancel"
+                />
+            </div>
+        </div>
+    </form>
+    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
+        <BaseInformationMessage v-if="updateMessage.title">
+            {{ updateMessage }}
+        </BaseInformationMessage>
+    </div>
+    <div
+          v-if="errorMessage.title"
+          class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
+        <BaseErrorMessage
+              :error-description=errorMessage.description
+              :error-title=errorMessage.title>
+        </BaseErrorMessage>
+    </div>
+</template>

@@ -1,3 +1,100 @@
+<script setup lang="ts">
+/*
+-------------------------------------------------------------------------------
+Imports
+-----------------------------------------------------------------------------*/
+/* Vue  */
+import {ref, watch} from 'vue'
+/* Components */
+import BaseTextarea from "../../ui/BaseTextarea.vue";
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import BaseInput from "../../ui/BaseInput.vue";
+/* Validation */
+import {FieldContext, useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/*
+-------------------------------------------------------------------------------
+Variable definitions
+------------------------------------------------------------------------------ */
+/* refs */
+
+/*
+character size limits and counts for textareas
+ */
+const enquiryCharCount = ref(0)
+const enquiryCharLimit = ref(512)
+
+let formValues = {
+    marketing_chk: false,
+    ecommerce_chk: false,
+    blog_chk: false,
+    portfolio_chk: false,
+    membership_chk: false,
+    personal_chk: false,
+    nonprofit_chk: false,
+    enquiry: "",
+    business_url: "",
+    business_name: "",
+}
+
+/* vee-validate schema */
+const validationSchema = object({
+    business_name: string().required('Please enter the business or enterprise name'),
+    business_url: string().required('Please enter the business or enterprise URL'),
+    enquiry: string().required('Please enter your enquiry details.'),
+})
+const {validate, errors} = useForm({
+    validationSchema
+})
+let {value: business_name}:FieldContext<string> = useField('business_name')
+let {value: business_url}:FieldContext<string> = useField('business_url')
+let {value: enquiry}:FieldContext<string> = useField('enquiry')
+let {value: marketing_chk}:FieldContext<boolean> = useField('marketing_chk')
+let {value: ecommerce_chk}:FieldContext<boolean> = useField('ecommerce_chk')
+let {value: blog_chk}:FieldContext<boolean> = useField('blog_chk')
+let {value: portfolio_chk}:FieldContext<boolean> = useField('portfolio_chk')
+let {value: membership_chk}:FieldContext<boolean> = useField('membership_chk')
+let {value: personal_chk}:FieldContext<boolean> = useField('personal_chk')
+let {value: nonprofit_chk}:FieldContext<boolean> = useField('nonprofit_chk')
+/*
+explicitly expose the vaildateForm function so that it can be called by the parent component
+ */
+defineExpose({
+    validateForm,
+})
+watch(enquiry, () => {
+    enquiryCharCount.value = enquiry.value.length
+})
+
+/*
+-------------------------------------------------------------------------------
+Functions
+-------------------------------------------------------------------------------*/
+async function validateForm() {
+    const {valid} = await validate()
+    //console.dir(valid)
+    //console.dir(errors)
+    if (valid) {
+        formValues.business_name = business_name.value
+        formValues.business_url = business_url.value
+        formValues.marketing_chk = marketing_chk.value
+        formValues.ecommerce_chk = ecommerce_chk.value
+        formValues.blog_chk = blog_chk.value
+        formValues.portfolio_chk = portfolio_chk.value
+        formValues.membership_chk = membership_chk.value
+        formValues.personal_chk = personal_chk.value
+        formValues.nonprofit_chk = nonprofit_chk.value
+        formValues.enquiry = enquiry.value
+        //console.log(formValues)
+    } else {
+        //console.log("New site failed")
+    }
+    return {
+        valid,
+        formValues
+    }
+}
+</script>
 <template>
     <form
           novalidate class="bg-black col-span-2 mt-2">
@@ -153,101 +250,9 @@
                   :character-count="enquiryCharCount"
                   :error="errors.enquiry"
                   :label-class="'block text-md text-gray-300'"
-                  :char-limit-class="'text-sm text-gray-400'"
+                  :char-limit-class="'text-sm text-gray-300'"
             >
             </BaseTextarea>
         </div>
     </form>
-
-
 </template>
-
-<script setup>
-/*
--------------------------------------------------------------------------------
-Imports
------------------------------------------------------------------------------*/
-/* Vue  */
-import {ref, watch} from 'vue'
-/* Components */
-import BaseTextarea from "../../ui/BaseTextarea.vue";
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import BaseInput from "../../ui/BaseInput.vue";
-/* Validation */
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/*
--------------------------------------------------------------------------------
-Variable definitions
------------------------------------------------------------------------------- */
-/* refs */
-const marketing_chk = ref(false)
-const ecommerce_chk = ref(false)
-const blog_chk = ref(false)
-const portfolio_chk = ref(false)
-const membership_chk = ref(false)
-const personal_chk = ref(false)
-const nonprofit_chk = ref(false)
-/*
-character size limits and counts for textareas
- */
-const enquiryCharCount = ref(0)
-const enquiryCharLimit = ref(512)
-
-let formValues = {}
-
-/* vee-validate schema */
-const validationSchema = object({
-    business_name: string().required('Please enter the business or enterprise name'),
-    business_url: string().required('Please enter the business or enterprise URL'),
-    enquiry: string().required('Please enter your enquiry details.'),
-})
-const {validate, errors} = useForm({
-    validationSchema
-})
-let {value: business_name} = useField('business_name')
-let {value: business_url} = useField('business_url')
-let {value: enquiry} = useField('enquiry')
-/*
-explicitly expose the vaildateForm function so that it can be called by the parent component
- */
-defineExpose({
-    validateForm,
-})
-watch(enquiry, () => {
-    enquiryCharCount.value = enquiry.value.length
-})
-
-/*
--------------------------------------------------------------------------------
-Functions
--------------------------------------------------------------------------------*/
-async function validateForm() {
-    const {valid} = await validate()
-    //console.dir(valid)
-    //console.dir(errors)
-    if (valid) {
-        formValues.business_name = business_name.value
-        formValues.business_url = business_url.value
-        formValues.marketing_chk = marketing_chk.value
-        formValues.ecommerce_chk = ecommerce_chk.value
-        formValues.blog_chk = blog_chk.value
-        formValues.portfolio_chk = portfolio_chk.value
-        formValues.membership_chk = membership_chk.value
-        formValues.personal_chk = personal_chk.value
-        formValues.nonprofit_chk = nonprofit_chk.value
-        formValues.enquiry = enquiry.value
-        //console.log(formValues)
-    } else {
-        //console.log("New site failed")
-    }
-    return {
-        valid,
-        formValues
-    }
-}
-</script>
-
-<style scoped>
-
-</style>

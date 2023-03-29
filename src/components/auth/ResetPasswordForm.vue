@@ -114,7 +114,7 @@ const onSubmit = handleSubmit(async form => {
         flgIsSubmitting.value = true
         await resetPassword(form)
         informationMessage.title = 'Success'
-        informationMessage.description = 'Your password has been reset.'
+        informationMessage.description = 'Your password has been reset. Redirecting you to the Login page where you can login with your new password'
         setTimeout(() => {
             router.push({name: 'login'})
         }, 5000);
@@ -229,8 +229,6 @@ const onSubmit = handleSubmit(async form => {
                               :disabled="flgIsSubmitting"
                         />
                     </div>
-                    {{ errorMessage }}
-                    {{ informationMessage }}
                     <BaseErrorMessage
                           v-if="errorMessage.title"
                           :error-description=errorMessage.description

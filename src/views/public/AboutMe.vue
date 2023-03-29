@@ -2,8 +2,8 @@
     <Navbar/>
     <div class="bg-black bg-black pt-10 sm:pt-16 lg:overflow-hidden lg:pt-8 lg:pb-14">
         <div class="mx-auto max-w-7xl lg:px-8">
-            <div class=" mt-4 bg-white lg:mx-auto lg:grid grid-cols-2  lg:grid-flow-col-dense lg:grid-cols-2   ">
-                <div class="px-8 col-span-1 bg-white my-8">
+            <div class=" mt-4 bg-white lg:mx-auto lg:grid grid-cols-2  lg:grid-flow-col-dense lg:grid-cols-2 rounded-lg  ">
+                <div class="px-8 col-span-1 bg-white my-8 rounded-lg">
                     <div class="lg:order-first lg:row-span-2 mt-4">
                         <h1 class="text-4xl font-bold tracking-tight text-teal-800  sm:text-5xl">
                             I’m Peter and I live in Cheshire, where I run my web design business.
@@ -49,7 +49,7 @@
                     </div>
 
                 </div>
-                <div class="px-24 col-span-1 pt-12  bg-gray-50 ">
+                <div class="px-24 col-span-1 pt-12  bg-gray-50 rounded-lg">
 
                         <div class="">
                             <img

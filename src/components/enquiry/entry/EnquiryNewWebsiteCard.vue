@@ -1,3 +1,89 @@
+<script setup lang="ts">
+/* 
+-------------------------------------------------------------------------------
+Imports
+-----------------------------------------------------------------------------*/
+/* Vue  */
+import {ref, watch} from 'vue'
+/* Components */
+import BaseTextarea from "../../ui/BaseTextarea.vue";
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+/* Validation */
+import {FieldContext, useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/*
+-------------------------------------------------------------------------------
+Variable definitions
+------------------------------------------------------------------------------ */
+/*
+character size limits and counts for textareas
+ */
+const enquiryCharCount = ref(0)
+const enquiryCharLimit = ref(512)
+
+let formValues = {
+    enquiry: "",
+    marketing_chk: false,
+    ecommerce_chk: false,
+    blog_chk: false,
+    portfolio_chk: false,
+    membership_chk: false,
+    personal_chk: false,
+    nonprofit_chk: false,
+}
+
+/* vee-validate schema */
+const validationSchema = object({
+    enquiry: string().required('Please enter your enquiry details.'),
+})
+const {validate, errors} = useForm({
+    validationSchema
+})
+let {value: enquiry}: FieldContext<string> = useField('enquiry')
+let {value: marketing_chk}: FieldContext<boolean>=useField('marketing_chk')
+let {value: ecommerce_chk}: FieldContext<boolean>=useField('ecommerce_chk')
+let {value: blog_chk}: FieldContext<boolean>=useField('blog_chk')
+let {value: portfolio_chk}: FieldContext<boolean>=useField('portfolio_chk')
+let {value: membership_chk}: FieldContext<boolean>=useField('membership_chk')
+let {value: personal_chk}: FieldContext<boolean>=useField('personal_chk')
+let {value: nonprofit_chk}: FieldContext<boolean>=useField('nonprofit_chk')
+/*
+explicitly expose the vaildateForm function so that it can be called by the parent component
+ */
+defineExpose({
+    validateForm,
+})
+watch(enquiry, () => {
+    enquiryCharCount.value = enquiry.value.length
+})
+
+/*
+-------------------------------------------------------------------------------
+Functions
+-------------------------------------------------------------------------------*/
+async function validateForm() {
+    const {valid} = await validate()
+    //console.dir(valid)
+    //console.dir(errors)
+    if (valid) {
+        formValues.marketing_chk = marketing_chk.value
+        formValues.ecommerce_chk = ecommerce_chk.value
+        formValues.blog_chk = blog_chk.value
+        formValues.portfolio_chk = portfolio_chk.value
+        formValues.membership_chk = membership_chk.value
+        formValues.personal_chk = personal_chk.value
+        formValues.nonprofit_chk = nonprofit_chk.value
+        formValues.enquiry = enquiry.value
+        //console.log(formValues)
+    } else {
+        console.log("New site failed")
+    }
+    return {
+        valid,
+        formValues
+    }
+}
+</script>
 <template>
     <form
           novalidate class="bg-black col-span-2 mt-2">
@@ -69,47 +155,47 @@
             </div>
         </div>
         <div class="grid md:grid-cols-2 sm:grid-cols-1">
-        <div class="mt-4  mx-2 col-span-1">
-            <BaseCheckbox
-                  v-model="membership_chk"
-                  :label="'Membership'"
-                  :label-description="'Registered users can access exclusive content as part of building customer loyalty.'"
-                  :model-value="membership_chk"
-                  :name="'membership_chk'"
-                  :labelClass="'text-md text-gray-300'"
-                  :labelDescriptionClass="'text-gray-400'"
-                  :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
-            >
-            </BaseCheckbox>
-        </div>
-        <div class="mt-4  mx-2 col-span-1">
-            <BaseCheckbox
-                  v-model="personal_chk"
-                  :label="'Personal'"
-                  :label-description="'A website focused on building a personal brand.'"
-                  :model-value="personal_chk"
-                  :name="'personal_chk'"
-                  :labelClass="'text-md text-gray-300'"
-                  :labelDescriptionClass="'text-gray-400'"
-                  :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
-            >
-            </BaseCheckbox>
-        </div>
+            <div class="mt-4  mx-2 col-span-1">
+                <BaseCheckbox
+                      v-model="membership_chk"
+                      :label="'Membership'"
+                      :label-description="'Registered users can access exclusive content as part of building customer loyalty.'"
+                      :model-value="membership_chk"
+                      :name="'membership_chk'"
+                      :labelClass="'text-md text-gray-300'"
+                      :labelDescriptionClass="'text-gray-400'"
+                      :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
+                >
+                </BaseCheckbox>
+            </div>
+            <div class="mt-4  mx-2 col-span-1">
+                <BaseCheckbox
+                      v-model="personal_chk"
+                      :label="'Personal'"
+                      :label-description="'A website focused on building a personal brand.'"
+                      :model-value="personal_chk"
+                      :name="'personal_chk'"
+                      :labelClass="'text-md text-gray-300'"
+                      :labelDescriptionClass="'text-gray-400'"
+                      :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
+                >
+                </BaseCheckbox>
+            </div>
         </div>
         <div class="grid md:grid-cols-2 sm:grid-cols-1">
-        <div class="mt-4 mx-2 col-span-1">
-            <BaseCheckbox
-                  v-model="nonprofit_chk"
-                  :label="'Non Profit'"
-                  :label-description="'A website for a charity or other non-profit organisation.'"
-                  :model-value="nonprofit_chk"
-                  :name="'nonprofit_chk'"
-                  :labelClass="'text-md text-gray-300'"
-                  :labelDescriptionClass="'text-gray-400'"
-                  :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
-            >
-            </BaseCheckbox>
-        </div>
+            <div class="mt-4 mx-2 col-span-1">
+                <BaseCheckbox
+                      v-model="nonprofit_chk"
+                      :label="'Non Profit'"
+                      :label-description="'A website for a charity or other non-profit organisation.'"
+                      :model-value="nonprofit_chk"
+                      :name="'nonprofit_chk'"
+                      :labelClass="'text-md text-gray-300'"
+                      :labelDescriptionClass="'text-gray-400'"
+                      :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
+                >
+                </BaseCheckbox>
+            </div>
         </div>
         <div class="mt-8">
             <BaseTextarea
@@ -128,89 +214,4 @@
             </BaseTextarea>
         </div>
     </form>
-
-
 </template>
-
-<script setup>
-/* 
--------------------------------------------------------------------------------
-Imports
------------------------------------------------------------------------------*/
-/* Vue  */
-import {ref, watch} from 'vue'
-/* Components */
-import BaseTextarea from "../../ui/BaseTextarea.vue";
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-/* Validation */
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/*
--------------------------------------------------------------------------------
-Variable definitions
------------------------------------------------------------------------------- */
-/* refs */
-const marketing_chk = ref(false)
-const ecommerce_chk = ref(false)
-const blog_chk = ref(false)
-const portfolio_chk = ref(false)
-const membership_chk = ref(false)
-const personal_chk = ref(false)
-const nonprofit_chk = ref(false)
-/*
-character size limits and counts for textareas
- */
-const enquiryCharCount = ref(0)
-const enquiryCharLimit = ref(512)
-
-let formValues = {}
-
-/* vee-validate schema */
-const validationSchema = object({
-    enquiry: string().required('Please enter your enquiry details.'),
-})
-const {validate, errors} = useForm({
-    validationSchema
-})
-let {value: enquiry} = useField('enquiry')
-/*
-explicitly expose the vaildateForm function so that it can be called by the parent component
- */
-defineExpose({
-    validateForm,
-})
-watch(enquiry, () => {
-    enquiryCharCount.value = enquiry.value.length
-})
-
-/*
--------------------------------------------------------------------------------
-Functions
--------------------------------------------------------------------------------*/
-async function validateForm() {
-    const {valid} = await validate()
-    //console.dir(valid)
-    //console.dir(errors)
-    if (valid) {
-        formValues.marketing_chk = marketing_chk.value
-        formValues.ecommerce_chk = ecommerce_chk.value
-        formValues.blog_chk = blog_chk.value
-        formValues.portfolio_chk = portfolio_chk.value
-        formValues.membership_chk = membership_chk.value
-        formValues.personal_chk = personal_chk.value
-        formValues.nonprofit_chk = nonprofit_chk.value
-        formValues.enquiry = enquiry.value
-        //console.log(formValues)
-    } else {
-        //console.log("New site failed")
-    }
-    return {
-        valid,
-        formValues
-    }
-}
-</script>
-
-<style scoped>
-
-</style>

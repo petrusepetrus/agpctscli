@@ -1,3 +1,81 @@
+<script setup lang="ts">
+/* 
+-------------------------------------------------------------------------------
+Imports
+-----------------------------------------------------------------------------*/
+/* Vue  */
+import {ref, watch} from 'vue'
+/* Components */
+import BaseTextarea from "../../ui/BaseTextarea.vue";
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import BaseInput from "../../ui/BaseInput.vue";
+/* Validation */
+import {FieldContext, useField, useForm} from 'vee-validate'
+import {object, string} from 'yup'
+/*
+-------------------------------------------------------------------------------
+Variable definitions
+------------------------------------------------------------------------------ */
+/* refs */
+const enquiryCharLimit = ref(512)
+const enquiryCharCount = ref(0)
+
+let formValues = {
+    bare_bones_chk: false,
+    maintenance_plus_chk: false,
+    business_name: "",
+    business_url: "",
+    enquiry: "",
+}
+
+/* vee-validate schema */
+const validationSchema = object({
+    business_name: string().required('Please enter the business or enterprise name'),
+    business_url: string().required('Please enter the business or enterprise URL'),
+    enquiry: string().required('Please provide some indication of the scope of maintenance required?'),
+})
+const {validate, errors} = useForm({
+    validationSchema
+})
+let {value: business_name}: FieldContext<string> = useField('business_name')
+let {value: business_url}: FieldContext<string> = useField('business_url')
+let {value: enquiry}: FieldContext<string> = useField('enquiry')
+let {value: bare_bones_chk}: FieldContext<boolean> = useField('bare_bones_chk')
+let {value: maintenance_plus_chk}: FieldContext<boolean> = useField('maintenance_plus_chk')
+/*
+explicitly expose the vaildateForm function so that it can be called by the parent component
+ */
+defineExpose({
+    validateForm,
+})
+watch(enquiry, () => {
+    enquiryCharCount.value = enquiry.value.length
+})
+
+/*
+-------------------------------------------------------------------------------
+Functions
+-------------------------------------------------------------------------------*/
+async function validateForm() {
+
+    const {valid} = await validate()
+    //console.dir(valid)
+    //console.dir(errors)
+    if (valid) {
+        formValues.bare_bones_chk = bare_bones_chk.value
+        formValues.maintenance_plus_chk = maintenance_plus_chk.value
+        formValues.business_name = business_name.value
+        formValues.business_url = business_url.value
+        formValues.enquiry = enquiry.value
+    } else {
+        //console.log("Maintenance failed")
+    }
+    return {
+        valid,
+        formValues
+    }
+}
+</script>
 <template>
     <form
           novalidate class="bg-black col-span-2 mt-2">
@@ -92,86 +170,4 @@
 
         </div>
     </form>
-
-
 </template>
-
-<script setup>
-/* 
--------------------------------------------------------------------------------
-Imports
------------------------------------------------------------------------------*/
-/* Vue  */
-import {ref, watch} from 'vue'
-/* Components */
-import BaseTextarea from "../../ui/BaseTextarea.vue";
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import BaseInput from "../../ui/BaseInput.vue";
-/* Validation */
-import {useField, useForm} from 'vee-validate'
-import {object, string} from 'yup'
-/*
--------------------------------------------------------------------------------
-Variable definitions
------------------------------------------------------------------------------- */
-/* refs */
-const bare_bones_chk = ref(false)
-const maintenance_plus_chk = ref(false)
-
-const enquiryCharLimit = ref(512)
-const enquiryCharCount = ref(0)
-
-
-let formValues = {}
-
-/* vee-validate schema */
-const validationSchema = object({
-    business_name: string().required('Please enter the business or enterprise name'),
-    business_url: string().required('Please enter the business or enterprise URL'),
-    enquiry: string().required('Please provide some indication of the scope of maintenance required?'),
-})
-const {validate, errors} = useForm({
-    validationSchema
-})
-let {value: business_name} = useField('business_name')
-let {value: business_url} = useField('business_url')
-let {value: enquiry} = useField('enquiry')
-
-/*
-explicitly expose the vaildateForm function so that it can be called by the parent component
- */
-defineExpose({
-    validateForm,
-})
-watch(enquiry, () => {
-    enquiryCharCount.value = enquiry.value.length
-})
-
-/*
--------------------------------------------------------------------------------
-Functions
--------------------------------------------------------------------------------*/
-async function validateForm() {
-
-    const {valid} = await validate()
-    //console.dir(valid)
-    //console.dir(errors)
-    if (valid) {
-        formValues.bare_bones_chk = bare_bones_chk.value
-        formValues.maintenance_plus_chk = maintenance_plus_chk.value
-        formValues.business_name = business_name.value
-        formValues.business_url = business_url.value
-        formValues.enquiry = enquiry.value
-    }else{
-        //console.log("Maintenance failed")
-    }
-    return {
-        valid,
-        formValues
-    }
-}
-</script>
-
-<style scoped>
-
-</style>

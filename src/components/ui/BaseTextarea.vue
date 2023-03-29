@@ -1,15 +1,14 @@
 <template>
-    <div class="flex justify-between">
+    <div class="md:flex md:justify-between sm:grid  sm:grid-cols-1">
     <label
           v-if="label"
           :for="uuid"
           :class="[labelClass,{ 'sr-only': !showLabel }]"
     >
         {{ label }}
-        <span v-if="required" class="text_sm text-red-500">*</span>
+        <span v-if="required" class="text-sm text-red-500">*</span>
     </label>
-
-        <span v-if="characterLimit>0" id="message-max" :class="charLimitClass">{{characterCount}} of maximum {{characterLimit}} characters</span>
+        <span v-if="characterLimit>0" id="message-max" :class="charLimitClass" >{{characterCount}} of {{characterLimit}} characters used</span>
     </div>
     <div class="mt-1">
         <textarea
@@ -103,7 +102,7 @@ export default {
         },
         charLimitClass:{
             type:String,
-            default:"text-sm text-gray-500"
+            default:"text-sm text-gray-400"
         },
         inputClass:{
             type:String,

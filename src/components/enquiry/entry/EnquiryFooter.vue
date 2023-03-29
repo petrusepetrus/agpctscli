@@ -1,70 +1,4 @@
-<template>
-    <form
-          novalidate class="bg-black col-span-2"
-          @submit.prevent="onSubmit">
-        <div class="mt-0">
-            <fieldset class="">
-                <div class="mt-4 space-y-4">
-
-                    <BaseCheckbox
-                          v-model="mailing_list "
-                          name="mailing_list"
-                          label="Mailing List"
-                          label-description="Keep up to date with news from me."
-                          :model-value="mailing_list"
-                          :labelClass="'text-md text-gray-300'"
-                          :labelDescriptionClass="'text-gray-400'"
-                          :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
-                    >
-                    </BaseCheckbox>
-                    <div class="text-sm text-gray-300 flex float-left" >
-                        <BaseCheckbox
-                              v-model="terms_and_conditions"
-                              name="terms_and_conditions"
-                              :required="true"
-                              label=""
-                              label-description=""
-                              :model-value="terms_and_conditions"
-                              :error="errors.terms_and_conditions"
-                              :labelClass="'text-md text-gray-300'"
-                              :labelDescriptionClass="'text-gray-400'"
-                              :inputClass="'float-left focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
-                        />
-                        <div class="flex-wrap justify-center">
-                            &nbspI have read and agree to the
-                            <router-link
-                                  to="/data-usage-policy"
-                                  target="_blank"
-                                  class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
-                            >
-                                &nbspdata usage policy
-                            </router-link>
-                            &nbsp<span class="text-xs text-gray-500">(will open in new window)</span>
-                        </div>
-
-                    </div>
-                </div>
-
-            </fieldset>
-            <div class="text-sm text-gray-300 mt-4">
-                This site is protected by reCAPTCHA and Google's
-                <a href="https://policies.google.com/privacy"
-                   target="_blank"
-                   class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
-                >Privacy Policy
-                </a>
-                and
-                <a href="https://policies.google.com/terms"
-                   target="_blank"
-                   class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
-                >Terms of Service
-                </a> apply <span class="text-xs text-gray-500">(will open in new window(s))</span>
-            </div>
-        </div>
-    </form>
-</template>
-
-<script setup>
+<script setup lang="ts">
 /* Overview
 -------------------------------------------------------------------------------
 UserReview enables the management of a selected Enquiry
@@ -75,7 +9,7 @@ UserReview enables the management of a selected Enquiry
 /*-------------------------------------------------------------------------------*/
 /* Vue
 /*-------------------------------------------------------------------------------*/
-import {ref, reactive} from 'vue'
+
 /*-------------------------------------------------------------------------------*/
 /* Router
 /*-------------------------------------------------------------------------------*/
@@ -87,8 +21,8 @@ import BaseCheckbox from "../../ui/BaseCheckbox.vue";
 /*-------------------------------------------------------------------------------*/
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
-import {object, string} from "yup";
-import { useReCaptcha } from "vue-recaptcha-v3";
+import {object} from "yup";
+import {useReCaptcha } from "vue-recaptcha-v3";
 /*-------------------------------------------------------------------------------*/
 /* Stores
 /*-------------------------------------------------------------------------------*/
@@ -96,7 +30,7 @@ import { useReCaptcha } from "vue-recaptcha-v3";
 /*-------------------------------------------------------------------------------*/
 /* Validation
 /*-------------------------------------------------------------------------------*/
-import {useField, useForm} from 'vee-validate'
+import {FieldContext, useField, useForm} from 'vee-validate'
 import {boolean} from 'yup'
 /*===============================================================================*/
 /* Props
@@ -105,26 +39,35 @@ import {boolean} from 'yup'
 /*===============================================================================*/
 /* Variable Declaration and Initialisation
 /*===============================================================================*/
+interface FormValues{
+    mailing_list:boolean,
+    terms_and_conditions:boolean
+}
 const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
 const route = useRoute();
-const mailing_list = ref(null)
+//const mailing_list = (null)
 
-let formValues = {}
+let formValues:FormValues = {
+    mailing_list:false,
+    terms_and_conditions:false
+}
 
 const validationSchema = object({
     terms_and_conditions: boolean().required('Please read and accept our data usage terms'),
+    mailing_list:boolean()
 })
 const {validate, errors, setFieldError} = useForm({
     validationSchema
 })
-let {value: terms_and_conditions} = useField('terms_and_conditions')
+let {value: mailing_list}: FieldContext<boolean> = useField('mailing_list')
+let {value: terms_and_conditions}: FieldContext<boolean> = useField('terms_and_conditions')
 /*
 explicitly expose the vaildateForm function so that it can be called by the parent component
  */
 defineExpose({
     validateForm,
 })
-terms_and_conditions.value = false
+//terms_and_conditions.value = false
 /*===============================================================================*/
 /* Emits
 /*===============================================================================*/
@@ -162,7 +105,7 @@ const recaptcha = async () => {
         // (optional) Wait until recaptcha has been loaded.
         await recaptchaLoaded();
         // Execute reCAPTCHA with action "login".
-        const token = await executeRecaptcha("login");
+        await executeRecaptcha("login");
         // Do stuff with the received token.
         //console.log({ token });
     }catch(e){
@@ -170,7 +113,65 @@ const recaptcha = async () => {
     }
 };
 </script>
-
-<style scoped>
-
-</style>
+<template>
+    <form
+          novalidate class="bg-black col-span-2"
+          @submit.prevent="onSubmit">
+        <div class="mt-0">
+            <fieldset class="">
+                <div class="mt-4 space-y-4">
+                    <BaseCheckbox
+                          v-model="mailing_list "
+                          name="mailing_list"
+                          label="Mailing List"
+                          label-description="Keep up to date with news from me."
+                          :model-value="mailing_list"
+                          :labelClass="'text-md text-gray-300'"
+                          :labelDescriptionClass="'text-gray-400'"
+                          :inputClass="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
+                    >
+                    </BaseCheckbox>
+                    <div class="text-sm text-gray-300 flex float-left" >
+                        <BaseCheckbox
+                              v-model="terms_and_conditions"
+                              name="terms_and_conditions"
+                              :required="true"
+                              label=""
+                              label-description=""
+                              :model-value="terms_and_conditions"
+                              :error="errors.terms_and_conditions"
+                              :labelClass="'text-md text-gray-300'"
+                              :labelDescriptionClass="'text-gray-400'"
+                              :inputClass="'float-left focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
+                        />
+                        <div class="flex-wrap justify-center">
+                            &nbspI have read and agree to the
+                            <router-link
+                                  to="/data-usage-policy"
+                                  target="_blank"
+                                  class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
+                            >
+                                &nbspdata usage policy
+                            </router-link>
+                            &nbsp<span class="text-xs text-gray-500">(will open in new window)</span>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <div class="text-sm text-gray-300 mt-4">
+                This site is protected by reCAPTCHA and Google's
+                <a href="https://policies.google.com/privacy"
+                   target="_blank"
+                   class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
+                >Privacy Policy
+                </a>
+                and
+                <a href="https://policies.google.com/terms"
+                   target="_blank"
+                   class="text-left border-teal-500 text-teal-500 border-b-2 hover:text-teal-200"
+                >Terms of Service
+                </a> apply <span class="text-xs text-gray-500">(will open in new window(s))</span>
+            </div>
+        </div>
+    </form>
+</template>

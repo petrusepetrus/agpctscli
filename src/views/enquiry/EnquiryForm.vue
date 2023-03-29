@@ -5,7 +5,6 @@
             <div class="mx-auto max-w-7xl lg:px-8">
                 <div  class="lg:grid lg:grid-cols-2 lg:gap-8 md:grid md:grid-cols-1">
                     <div class="mx-auto max-w-md px-4 sm:max-w-2xl sm:px-6 sm:text-center lg:flex lg:items-center lg:px-0 lg:text-left">
-
                         <div v-if="!flgSubmissionSuccessful" class="lg:py-8 ">
                             <h1
                                   class="text-5xl block bg-gradient-to-r from-teal-200 to-cyan-400 bg-clip-text pb-3 text-transparent sm:pb-5">
@@ -49,6 +48,7 @@
                             <img class="lg:absolute lg:inset-y-0 lg:left-0 max-h-80 "
                                  src="/images/website_design.jpg" alt=""/>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -237,7 +237,7 @@ const onSubmit = async (e) => {
         let sfm4 = await enquiryWebsiteMaintenanceCard.value.validateForm()
         formsToValidate.push(sfm4)
     }
-    if (enquiryType.value === 'Search Engine Optimisation and Ranking') {
+    if (enquiryType.value === 'Search Engine Optimisation and Digital Marketing') {
         let sfm5 = await enquirySEOCard.value.validateForm()
         formsToValidate.push(sfm5)
     }
