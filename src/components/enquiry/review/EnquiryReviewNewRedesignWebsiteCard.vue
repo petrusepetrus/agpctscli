@@ -1,3 +1,12 @@
+<script setup lang="ts">
+
+import {useEnquiryStore} from "../../../stores/EnquiryStore.js"
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import {storeToRefs} from "pinia";
+
+const enquiryStore = useEnquiryStore()
+const {enquiry} = storeToRefs(enquiryStore)
+</script>
 <template>
     <div class="overflow-hidden p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500">
         <div class="overflow-hidden p-4 bg-black rounded-md border-1 ">
@@ -125,18 +134,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-
-import {useEnquiryStore} from "../../../stores/EnquiryStore.js"
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import {storeToRefs} from "pinia";
-
-
-const enquiryStore = useEnquiryStore()
-const {enquiry} = storeToRefs(enquiryStore)
-</script>
-
-<style scoped>
-
-</style>

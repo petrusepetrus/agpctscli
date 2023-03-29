@@ -1,3 +1,151 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+Enquiry review comment allows the user to review the comments associated
+with a particular enquiry as a list with the facility to edit or delete
+any enquiry in that list
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {reactive, ref, watch} from 'vue'
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {storeToRefs} from "pinia";
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseWarningMessage from "../../ui/BaseWarningMessage.vue";
+import BaseErrorMessage from "../../ui/BaseErrorMessage.vue";
+import BaseInformationMessage from "../../ui/BaseInformationMessage.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useMiscService from "../../../services/misc/useMiscService.js";
+import useErrorService from "../../../services/useErrorService.js";
+import moment from 'moment';
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+import {useEnquiryStore} from "../../../stores/EnquiryStore.js";
+
+const enquiryStore = useEnquiryStore()
+const {enquiry} = storeToRefs(enquiryStore)
+
+
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+const props = defineProps({
+    changeMode: {
+        type: String,
+        default: ""
+    },
+    commentID: {
+        type: Number,
+        default: 0
+    }
+})
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+const emit = defineEmits(['changeComment', 'deleted'])
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage{
+    title:string,
+    description:string,
+}
+let errorMessage :GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+let warningMessage  :GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+let informationMessage  :GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+let flgCommentsExist = ref(false)
+
+let flgAddingComment = ref(false)            //flags we are adding a comment
+let flgChangingComment = ref(false)          //flags we are changing a comment
+let flgDeletingComment = ref(false)
+
+let processForm = ref(true)
+
+if (enquiryStore.enquiry.enquiry_comments.length > 0) {
+    flgCommentsExist.value = true
+}
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+watch(() => enquiryStore.enquiry.enquiry_comments.length, () => {
+    //console.log("watcher saw change")
+    if (enquiryStore.enquiry.enquiry_comments.length > 0) {
+        flgCommentsExist.value = true
+    } else {
+        flgCommentsExist.value = false
+    }
+})
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const {errorMessageHandler} = useErrorService()
+const {deleteEnquiryComment, getEnquiryComments} = useMiscService()
+const deleteComment = async (enquiryCommentToDeleteID, enquiryID) => {
+    flgDeletingComment.value = true
+    //console.log(enquiryCommentToDeleteID + " " + enquiryID)
+    try {
+        await deleteEnquiryComment(enquiryCommentToDeleteID)
+        let response = await getEnquiryComments(enquiryID)
+        //console.log(response)
+        enquiryStore.enquiry.enquiry_comments = response
+        informationMessage.title = "Comment Deleted"
+        emit('deleted')
+    } catch (e) {
+        errorMessage = await errorMessageHandler(e)
+        processForm.value = false
+    }
+    flgDeletingComment.value = false
+}
+const changeComment = (enquiryCommentID) => {
+    //console.log("change mode ", "changeMode", enquiryCommentID)
+    emit('changeComment', "change", enquiryCommentID)
+}
+
+/*
+const onCancelled = () => {
+/*
+    triggered by PhoneForm component to indicate user cancelled the add
+    or change so toggle the flags off to remove the PhoneForm component
+*/
+/*
+    //console.log("cancellation received in list")
+    flgAddingComment.value = false
+    flgChangingComment.value = false
+    informationMessage.title = "Change Cancelled"
+}
+*/
+const formatDate = (dateToFormat) => {
+    return moment(dateToFormat).format('DD/MM/YYYY h:mm a');
+}
+</script>
 <template>
     <div v-if="flgCommentsExist" class="overflow-hidden  p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500">
         <div
@@ -92,151 +240,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-UserReview enables the management of a selected Enquiry
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {reactive, ref, toRefs, watch} from 'vue'
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-import {storeToRefs} from "pinia";
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseSpinner from "../../ui/BaseSpinner.vue";
-import BaseWarningMessage from "../../ui/BaseWarningMessage.vue";
-import BaseErrorMessage from "../../ui/BaseErrorMessage.vue";
-import BaseInformationMessage from "../../ui/BaseInformationMessage.vue";
-import EnquiryReviewCommentForm from "./EnquiryReviewCommentForm.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useMiscService from "../../../services/misc/useMiscService.js";
-import useErrorService from "../../../services/useErrorService.js";
-import moment from "moment";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-import {useEnquiryStore} from "../../../stores/EnquiryStore.js";
-
-const enquiryStore = useEnquiryStore()
-const {enquiry} = storeToRefs(enquiryStore)
-
-
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-const props = defineProps({
-    changeMode: {
-        type: String,
-        default: ""
-    },
-    commentID: {
-        type: Number,
-        default: 0
-    }
-})
-//console.log(props)
-
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-const emit = defineEmits(['changeComment', 'deleted'])
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-let errorMessage = reactive({})
-let warningMessage = reactive({})
-let informationMessage = reactive({})
-let flgCommentsExist = ref(false)
-
-let flgIsLoading = ref(false)
-let flgAddingComment = ref(false)            //flags we are adding a phone
-let flgChangingComment = ref(false)          //flags we are changing a phone
-let flgDeletingComment = ref(false)
-
-let processForm = ref(true)
-
-if (enquiryStore.enquiry.enquiry_comments.length > 0) {
-    flgCommentsExist.value = true
-}
-/*===============================================================================*/
-/* Watches
-/*===============================================================================*/
-watch(() => props.changeMode, () => {
-//    /*
-//    Purpose:
-//        on a change in Name search field loads the enquiries list for that filter
-//     */
-    //console.log(props.changeMode)
-})
-watch(() => enquiryStore.enquiry.enquiry_comments.length, () => {
-    //console.log("watcher saw change")
-    if (enquiryStore.enquiry.enquiry_comments.length > 0) {
-        flgCommentsExist.value = true
-    } else {
-        flgCommentsExist.value = false
-    }
-})
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-const {errorMessageHandler} = useErrorService()
-const {deleteEnquiryComment, getEnquiryComments} = useMiscService()
-const deleteComment = async (enquiryCommentToDeleteID, enquiryID) => {
-    flgDeletingComment.value = true
-    //console.log(enquiryCommentToDeleteID + " " + enquiryID)
-    try {
-        await deleteEnquiryComment(enquiryCommentToDeleteID)
-        let response = await getEnquiryComments(enquiryID)
-        //console.log(response)
-        enquiryStore.enquiry.enquiry_comments = response
-        informationMessage.title = "Comment Deleted"
-        emit('deleted')
-    } catch (e) {
-        errorMessage.value = await errorMessageHandler(e)
-        processForm.value = false
-    }
-    flgDeletingComment.value = false
-}
-const changeComment = (enquiryCommentID) => {
-    //console.log("change mode ", "changeMode", enquiryCommentID)
-    emit('changeComment', "change", enquiryCommentID)
-}
-
-const onCancelled = () => {
-    /*"""
-    triggered by PhoneForm component to indicate user cancelled the add
-    or change so toggle the flags off to remove the PhoneForm component
-     */
-    //console.log("cancellation received in list")
-    flgAddingComment.value = false
-    flgChangingComment.value = false
-    informationMessage.title = "Change Cancelled"
-}
-
-const formatDate = (dateToFormat) => {
-    return moment(dateToFormat).format('DD/MM/YYYY h:mm a');
-}
-</script>
-
-<style scoped>
-
-</style>

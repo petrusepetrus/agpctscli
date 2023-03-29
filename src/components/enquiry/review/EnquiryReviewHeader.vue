@@ -4,7 +4,7 @@
         <div class="px-4 py-5 sm:px-6">
             <h1 class="text-3xl leading-tight text-teal-500">Enquiry {{ enquiry.id }}</h1>
         </div>
-        <div class="px-4 py-5 sm:px-6 grid md:grid-cols-2 sm:grid-cols-1 flex flex-auto gap-y-8 gap-x-8">
+        <div class="px-4 py-5 sm:px-6 grid lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 flex flex-auto gap-y-8 gap-x-8">
             <dl class="p-2 bg-black shadow sm:rounded-lg">
                 <h2 class="px-2 text-lg font-medium leading-6 text-teal-500">Summary</h2>
                 <div class="px-4">
@@ -48,7 +48,6 @@
                     <div class="mt-4">
                         <dt class="text-sm font-medium text-gray-400">Phone</dt>
                         <dd class="mt-1 text-sm text-gray-300">
-
                             {{ enquiry.phone_number }}
                         </dd>
                     </div>
@@ -72,6 +71,43 @@
                                   :input-class="'focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 rounded'"
                             >
                             </BaseCheckbox>
+                        </dd>
+                    </div>
+                </div>
+            </dl>
+            <dl v-if="userFound" class="p-2 bg-black shadow sm:rounded-lg">
+                <h2 class="px-2 text-lg font-medium leading-6 text-teal-500">
+                    User Details
+                </h2>
+                <div  class="px-4">
+                    <div v-if="enquiry.user.user_user_type.length>0"  class="mt-4">
+                        <dt class="text-sm font-medium text-gray-400">User Type</dt>
+                        <table v-for="userType in enquiry.user.user_user_type" class="table-fixed">
+                            <tr>
+                                <td class="mt-1 text-sm text-gray-300 pr-8">{{ userType.user_type.user_type }}</td>
+                                <td class="mt-1 text-sm text-gray-300" :class="getUserTypeStatus(userType.user_type_status.user_type_status)">{{userType.user_type_status.user_type_status}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div   class="mt-4">
+                        <dt class="text-sm font-medium text-gray-400">Roles</dt>
+                        <table v-for="role in enquiry.user.roles" class="table-fixed">
+                            <tr>
+                                <td class="mt-1 text-sm text-gray-300">{{ role.name }}</td>
+                                <td class="mt-1 text-sm text-gray-300">{{ formatDate(role.created_at) }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <dt class="text-sm font-medium text-gray-400">Created At</dt>
+                        <dd class="mt-1 text-sm text-gray-300">
+                            {{ formatDate(enquiry.user.created_at) }}
+                        </dd>
+                    </div>
+                    <div class="mt-4">
+                        <dt class="text-sm font-medium text-gray-400">Verified At</dt>
+                        <dd class="mt-1 text-sm text-gray-300">
+                            {{ formatDate(enquiry.user.email_verified_at) }}
                         </dd>
                     </div>
                 </div>
@@ -113,6 +149,7 @@ const getEnquiryStatus = (enquiryStatus) => {
         default:
     }
 }
+
 const getUserTypeStatus = (enquiryStatus) => {
     switch (enquiryStatus) {
         case 'Inactive':

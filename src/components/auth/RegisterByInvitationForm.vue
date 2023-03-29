@@ -92,7 +92,7 @@ const validationSchema = object({
 /*
 Define functional components to be used by vee-validate 'useForm'
  */
-const {handleSubmit, setFieldError, errors} = useForm({
+const {handleSubmit, setFieldError,isSubmitting, errors} = useForm({
     validationSchema
 })
 
@@ -155,6 +155,8 @@ if the registration is valid...
     revoke the invitation as it is no longer needed
  */
 const onSubmit = handleSubmit(async (values) => {
+    errorMessage.title=""
+    errorMessage.description=""
     if (email.value !== invitation_email.value) {
         setFieldError('email', 'This email address does not correspond to this invitation. Please request another invitation.')
     } else {
@@ -273,8 +275,8 @@ const onSubmit = handleSubmit(async (values) => {
                     <div>
                         <BaseButton
                               title="Register"
-                              :submitting="flgIsSubmitting"
-                              :disabled="flgIsSubmitting"
+                              :submitting="isSubmitting"
+                              :disabled="isSubmitting"
                         />
                     </div>
                 </form>

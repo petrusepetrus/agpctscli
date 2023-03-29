@@ -1,78 +1,8 @@
-<template>
-    <div class="p-4  p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500 px-4 py-5 sm:px-6 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 flex flex-auto gap-y-8 gap-x-8">
-        <div class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg  relative">
-            <div class="px-8 py-5 sm:p-6 grid-rows-3 ">
-                <h3 class="text-lg font-medium leading-6 text-teal-400">Delete</h3>
-                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
-                    <p>Permanently delete the enquiry from the system.</p>
-                </div>
-                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
-                    <BaseButton
-                          title="Delete"
-                          :disabled="isSubmitting"
-                          :submitting="isSubmitting"
-                          @click="deleteCurrentEnquiry">
-                    </BaseButton>
-                </div>
-
-            </div>
-        </div>
-        <div class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg relative">
-            <div class="px-8 py-5 sm:p-6 flex flex-row flex-wrap ">
-                <h3 class="text-lg font-medium leading-6 text-teal-400">Comment</h3>
-                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
-                    <p>Comment on the enquiry for later review.</p>
-                </div>
-                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
-                    <BaseButton
-                          title="Comment"
-                          :submitting="isSubmitting"
-                          :disabled="isSubmitting"
-                          @click="addComment">
-                    </BaseButton>
-                </div>
-            </div>
-        </div>
-        <div v-if="!userFound" class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg relative">
-            <div class="px-8 py-5 sm:p-6 flex flex-row flex-wrap ">
-                <h3 class="text-lg font-medium leading-6 text-teal-400">Invite</h3>
-                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
-                    <p>Invite the enquirer to register as a user on the system.</p>
-                </div>
-                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
-                <BaseButton
-                      title="Invite"
-                      :submitting="isSubmitting"
-                      :disabled="isSubmitting"
-                      @click="sendInvite">
-                </BaseButton>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
-        <BaseErrorMessage
-              v-if="errorMessage.title"
-              :error-description=errorMessage.description
-              :error-title=errorMessage.title>
-        </BaseErrorMessage>
-    </div>
-    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
-        <BaseInformationMessage
-              v-if="informationMessage.title"
-              :title=informationMessage.title
-              :description="informationMessage.description"
-              :error-title=informationMessage.title>
-        </BaseInformationMessage>
-    </div>
-
-</template>
-
-<script setup>
+<script setup lang="ts">
 /* Overview
 -------------------------------------------------------------------------------
-UserReview enables the management of a selected Enquiry
+Enquiry review footer is a container for the Delete, Comment and Invite functions
+that are housed in their own components
 -------------------------------------------------------------------------------*/
 /*===============================================================================*/
 /* Imports
@@ -85,7 +15,7 @@ import {storeToRefs} from 'pinia';
 /*-------------------------------------------------------------------------------*/
 /* Router
 /*-------------------------------------------------------------------------------*/
-import {useRoute,useRouter} from "vue-router";
+import {useRouter} from "vue-router";
 /*-------------------------------------------------------------------------------*/
 /* Components
 /*-------------------------------------------------------------------------------*/
@@ -120,8 +50,28 @@ const emit = defineEmits(['addComment'])
 /*===============================================================================*/
 /* Variable Declaration and Initialisation
 /*===============================================================================*/
-let errorMessage = reactive({})
-let informationMessage = reactive({})
+interface Payload {
+    enquiry_id: number,
+    email: string
+}
+
+interface GenericMessage {
+    title: string,
+    description: string
+}
+
+let payload: Payload = {
+    enquiry_id: 0,
+    email: ""
+}
+let errorMessage: GenericMessage = reactive({
+    title: "",
+    description: "",
+})
+let informationMessage: GenericMessage = reactive({
+    title: "",
+    description: "",
+})
 const isSubmitting = ref(false)
 const userFound = ref(false)
 
@@ -136,7 +86,7 @@ if (enquiryStore.enquiry.user !== null) {
 /* Functions
 /*===============================================================================*/
 const router = useRouter()
-const {sendInvitation,getEnquiry,deleteEnquiry} = useMiscService()
+const {sendInvitation, getEnquiry, deleteEnquiry} = useMiscService()
 const {errorMessageHandler} = useErrorService
 
 const sendInvite = async () => {
@@ -148,19 +98,20 @@ const sendInvite = async () => {
     }
     try {
         errorMessage.title = null
-        informationMessage.title=null
+        informationMessage.title = null
         isSubmitting.value = true
-        let payload = {}
-        payload.enquiry_id=enquiryStore.enquiry.id
+
+        payload.enquiry_id = enquiryStore.enquiry.id
         payload.email = enquiryStore.enquiry.email
+
         //console.log(payload)
         await sendInvitation(payload)
-        payload =enquiryStore.enquiry.id
+        //payload = enquiryStore.enquiry.id
         //console.log(payload)
-        let response=await getEnquiry(payload)
-        informationMessage.title="Invitation Sent"
-        informationMessage.description="Congratulations - your invitation was successfuly sent."
-        enquiryStore.enquiry=response.data
+        let response = await getEnquiry(payload.enquiry_id)
+        informationMessage.title = "Invitation Sent"
+        informationMessage.description = "Congratulations - your invitation was successfuly sent."
+        enquiryStore.enquiry = response.data
         isSubmitting.value = false
     } catch (e) {
         isSubmitting.value = false
@@ -211,7 +162,73 @@ const addComment = async () => {
 const validateInvitation = async () => {
 }
 </script>
+<template>
+    <div class="p-4  p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500 px-4 py-5 sm:px-6 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 flex flex-auto gap-y-8 gap-x-8">
+        <div class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg  relative">
+            <div class="px-8 py-5 sm:p-6 grid-rows-3 ">
+                <h3 class="text-lg font-medium leading-6 text-teal-400">Delete</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
+                    <p>Permanently delete the enquiry from the system.</p>
+                </div>
+                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
+                    <BaseButton
+                          title="Delete"
+                          :disabled="isSubmitting"
+                          :submitting="isSubmitting"
+                          @click="deleteCurrentEnquiry">
+                    </BaseButton>
+                </div>
 
-<style scoped>
+            </div>
+        </div>
+        <div class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg relative">
+            <div class="px-8 py-5 sm:p-6 flex flex-row flex-wrap ">
+                <h3 class="text-lg font-medium leading-6 text-teal-400">Comment</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
+                    <p>Comment on the enquiry for later review.</p>
+                </div>
+                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
+                    <BaseButton
+                          title="Comment"
+                          :submitting="isSubmitting"
+                          :disabled="isSubmitting"
+                          @click="addComment">
+                    </BaseButton>
+                </div>
+            </div>
+        </div>
+        <div v-if="!userFound" class="bg-black rounded-md border-1 shadow-inner shadow-gray-500 sm:rounded-lg relative">
+            <div class="px-8 py-5 sm:p-6 flex flex-row flex-wrap ">
+                <h3 class="text-lg font-medium leading-6 text-teal-400">Invite</h3>
+                <div class="mt-2 max-w-xl text-sm text-gray-400 mb-12">
+                    <p>Invite the enquirer to register as a user on the system.</p>
+                </div>
+                <div class="px-8 absolute inset-x-5 bottom-2 px-4">
+                    <BaseButton
+                          title="Invite"
+                          :submitting="isSubmitting"
+                          :disabled="isSubmitting"
+                          @click="sendInvite">
+                    </BaseButton>
+                </div>
+            </div>
+        </div>
+    </div>
 
-</style>
+    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
+        <BaseErrorMessage
+              v-if="errorMessage.title"
+              :error-description=errorMessage.description
+              :error-title=errorMessage.title>
+        </BaseErrorMessage>
+    </div>
+    <div class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
+        <BaseInformationMessage
+              v-if="informationMessage.title"
+              :title=informationMessage.title
+              :description="informationMessage.description"
+              :error-title=informationMessage.title>
+        </BaseInformationMessage>
+    </div>
+
+</template>
