@@ -1,44 +1,4 @@
-<template>
-    <div class="bg-white relative py-8 md:py-12 lg:py-24">
-        <div class="relative">
-            <div class="mx-auto max-w-md px-4 text-center sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
-                <h2 class="text-lg font-semibold text-cyan-600">How We Work</h2>
-                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Business Driven
-                    Development</p>
-                <p class="mx-auto mt-5 max-w-prose text-xl text-gray-500">
-                    Our working methodology provides a structured approach to defining your business needs
-                    and designing a website that meets those requirements.
-                </p>
-            </div>
-            <div class="mx-auto mt-12 grid gap-8 px-2 md:px-4 lg:max-w-7xl lg:grid-cols-3 md:grid-cols-2 lg:px-8">
-                <div v-for="post in methodologyParts" :key="post.id"
-                     class="flex flex-col overflow-hidden rounded-lg shadow-md">
-                    <div class="flex-shrink-0">
-                        <img class="h-48 w-full object-cover" :src="imageURL(post.imageUrl)" alt=""/>
-                    </div>
-                    <div class="flex flex-1 flex-col justify-between bg-gray-50  p-6">
-
-                        <div class="flex-1">
-                            <div class="mt-2 block h-48 ">
-                                <!--
-        <a :href="post.href" class="mt-2 block">
-        -->
-                                <p class="text-xl font-semibold text-teal-500 text-center">{{ post.title }}</p>
-                                <p class="mt-3 text-base text-gray-500">{{ post.preview }}</p>
-                                <!--
-        </a>
-        -->
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
-<script setup>
+<script setup lang="ts">
 const methodologyParts = [
     {
         id: 0,
@@ -172,7 +132,42 @@ const imageURL=(hrefName)=>{
     return tmpURL
 }
 </script>
+<template>
+    <div class="bg-white relative py-8 md:py-12 lg:py-24">
+        <div class="relative">
+            <div class="mx-auto max-w-md px-4 text-center sm:max-w-3xl sm:px-6 lg:max-w-7xl lg:px-8">
+                <h2 class="text-lg font-semibold text-cyan-600">How We Work</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Business Driven
+                    Development</p>
+                <p class="mx-auto mt-5 max-w-prose text-xl text-gray-500">
+                    Our working methodology provides a structured approach to defining your business needs
+                    and designing a website that meets those requirements.
+                </p>
+            </div>
+            <div class="mx-auto mt-12 grid gap-8 px-2 md:px-4 lg:max-w-7xl lg:grid-cols-3 md:grid-cols-2 lg:px-8">
+                <div v-for="post in methodologyParts" :key="post.id"
+                     class="flex flex-col overflow-hidden rounded-lg shadow-md">
+                    <div class="flex-shrink-0">
+                        <img class="h-48 w-full object-cover" :src="imageURL(post.imageUrl)" alt=""/>
+                    </div>
+                    <div class="flex flex-1 flex-col justify-between bg-gray-50  p-6">
 
-<style scoped>
+                        <div class="flex-1">
+                            <div class="mt-2 block h-48 ">
+                                <!--
+        <a :href="post.href" class="mt-2 block">
+        -->
+                                <p class="text-xl font-semibold text-teal-500 text-center">{{ post.title }}</p>
+                                <p class="mt-3 text-base text-gray-500">{{ post.preview }}</p>
+                                <!--
+        </a>
+        -->
+                            </div>
+                        </div>
 
-</style>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

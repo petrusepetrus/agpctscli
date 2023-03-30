@@ -1,3 +1,174 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+Enquiry form controller for determining which components
+of the various enquiry options to display, based on the user's enquiry type
+selection.
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {ref,reactive} from 'vue'
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {useRouter} from "vue-router";
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseButton from "../../components/ui/BaseButton.vue";
+import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
+import EnquiryNewWebsiteCard from "../../components/enquiry/entry/EnquiryNewWebsiteCard.vue";
+import EnquiryHeader from "../../components/enquiry/entry/EnquiryHeader.vue";
+import EnquiryWebsiteRedesignCard from "../../components/enquiry/entry/EnquiryWebsiteRedesignCard.vue";
+import EnquiryWebsiteMaintenanceCard from "../../components/enquiry/entry/EnquiryWebsiteMaintenanceCard.vue";
+import EnquirySEOCard from "../../components/enquiry/entry/EnquirySEOCard.vue"
+import EnquirySomethingElseCard from "../../components/enquiry/entry/EnquirySomethingElseCard.vue"
+import EnquiryFooter from "../../components/enquiry/entry/EnquiryFooter.vue"
+import EnquiryConfirmation from "../../components/enquiry/entry/EnquiryConfirmation.vue";
+import Navbar2 from "../../components/layout/Navbar.vue";
+import {PhoneIcon, EnvelopeIcon} from "@heroicons/vue/24/solid/"
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useMiscService from "../../services/misc/useMiscService.js";
+import useErrorService from "../../services/useErrorService.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage {
+    title: string,
+    description: string,
+}
+const router = useRouter()
+let errorMessage:GenericMessage = reactive({
+    title:"",
+    description:""
+})
+const enquiryHeader = ref(null)
+const enquiryNewWebsiteCard = ref(null)
+const enquiryWebsiteRedesignCard = ref(null)
+const enquiryWebsiteMaintenanceCard = ref(null)
+const enquirySEOCard = ref(null)
+const enquirySomethingElseCard = ref(null)
+const enquiryFooter = ref(null)
+
+let enquiryType = ref('nought')
+let enquirySelected = ref(false)
+let flgIsSubmitting = ref(false)
+let flgSubmissionSuccessful = ref(false)
+
+let consolidateFormValues = {}
+
+const {storeEnquiry} = useMiscService()
+const {errorMessageHandler} = useErrorService()
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const onSubmit = async (e) => {
+    e.preventDefault
+    flgIsSubmitting.value = true
+    let formsToValidate = []
+    let sfm1 = await enquiryHeader.value.validateForm()
+    formsToValidate.push(sfm1)
+    //console.log(enquiryType.value)
+    if (enquiryType.value === 'New Website') {
+        let sfm2 = await enquiryNewWebsiteCard.value.validateForm()
+        //console.log(sfm2)
+        formsToValidate.push(sfm2)
+    }
+    if (enquiryType.value === 'Redesign of Existing Website') {
+        let sfm3 = await enquiryWebsiteRedesignCard.value.validateForm()
+        //console.log(sfm3)
+        formsToValidate.push(sfm3)
+    }
+    if (enquiryType.value === 'Website Maintenance') {
+        let sfm4 = await enquiryWebsiteMaintenanceCard.value.validateForm()
+        formsToValidate.push(sfm4)
+    }
+    if (enquiryType.value === 'Search Engine Optimisation and Digital Marketing') {
+        let sfm5 = await enquirySEOCard.value.validateForm()
+        formsToValidate.push(sfm5)
+    }
+    if (enquiryType.value === 'Something Else') {
+        let sfm6 = await enquirySomethingElseCard.value.validateForm()
+        formsToValidate.push(sfm6)
+    }
+    let sfm7 = await enquiryFooter.value.validateForm()
+    formsToValidate.push(sfm7)
+
+    Promise.all(formsToValidate).then(result => {
+        //console.log(result)
+        let formValid = true
+        for (const element of result) {
+            if (element.valid === false) {
+                formValid = false
+                break
+            } else {
+                consolidateFormValues = {...consolidateFormValues, ...element.formValues}
+            }
+        }
+        if (formValid === true) {
+            //console.log(consolidateFormValues)
+            saveEnquiry()
+        } else {
+            errorMessage.title = "Oops - something doesn't look right."
+            errorMessage.description = "Please check that all the fields highlighted with a red asterisk are present, that " +
+                  "there are no error messages showing  and then give it another go."
+            //console.log("failed")
+            flgIsSubmitting.value = false
+        }
+    })
+}
+const saveEnquiry = async () => {
+    try {
+        await storeEnquiry(consolidateFormValues)
+        errorMessage.title = null
+        errorMessage.description = null
+        flgSubmissionSuccessful.value = true
+        flgIsSubmitting.value = false
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(() => {
+                  //flgSubmissionSuccessful.value = false
+                  router.push({name: "home"})
+              },
+              5000
+        )
+
+    } catch (e) {
+        errorMessage = await errorMessageHandler(e)
+        flgIsSubmitting.value = false
+    }
+}
+const changeEnquiryType = (newEnquiryType) => {
+    enquirySelected.value = true
+    enquiryType.value = newEnquiryType
+}
+
+</script>
 <template>
     <div>
         <Navbar2></Navbar2>
@@ -133,171 +304,3 @@
         </div>
     </div>
 </template>
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-Enquiry form controller for determining which components
-of the various enquiry options to display, based on the user's enquiry type
-selection.
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/*-------------------------------------------------------------------------------*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {ref} from 'vue'
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-import {useRouter} from "vue-router";
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseButton from "../../components/ui/BaseButton.vue";
-import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
-import EnquiryNewWebsiteCard from "../../components/enquiry/entry/EnquiryNewWebsiteCard.vue";
-import EnquiryHeader from "../../components/enquiry/entry/EnquiryHeader.vue";
-import EnquiryWebsiteRedesignCard from "../../components/enquiry/entry/EnquiryWebsiteRedesignCard.vue";
-import EnquiryWebsiteMaintenanceCard from "../../components/enquiry/entry/EnquiryWebsiteMaintenanceCard.vue";
-import EnquirySEOCard from "../../components/enquiry/entry/EnquirySEOCard.vue"
-import EnquirySomethingElseCard from "../../components/enquiry/entry/EnquirySomethingElseCard.vue"
-import EnquiryFooter from "../../components/enquiry/entry/EnquiryFooter.vue"
-import EnquiryConfirmation from "../../components/enquiry/entry/EnquiryConfirmation.vue";
-import Navbar2 from "../../components/layout/Navbar.vue";
-import {PhoneIcon, EnvelopeIcon} from "@heroicons/vue/24/solid/"
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
-import useErrorService from "../../services/useErrorService.js";
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------------------*/
-/* Validation
-/*-------------------------------------------------------------------------------*/
-
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-const router = useRouter()
-const errorMessage = ref({})
-const enquiryHeader = ref(null)
-const enquiryNewWebsiteCard = ref(null)
-const enquiryWebsiteRedesignCard = ref(null)
-const enquiryWebsiteMaintenanceCard = ref(null)
-const enquirySEOCard = ref(null)
-const enquirySomethingElseCard = ref(null)
-const enquiryFooter = ref(null)
-
-let enquiryType = ref('nought')
-let enquirySelected = ref(false)
-let flgIsSubmitting = ref(false)
-let flgSubmissionSuccessful = ref(false)
-
-let consolidateFormValues = {}
-
-const {storeEnquiry} = useMiscService()
-const {errorMessageHandler} = useErrorService()
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-const onSubmit = async (e) => {
-    e.preventDefault
-    flgIsSubmitting.value = true
-    let formsToValidate = []
-    let sfm1 = await enquiryHeader.value.validateForm()
-    formsToValidate.push(sfm1)
-    //console.log(enquiryType.value)
-    if (enquiryType.value === 'New Website') {
-        let sfm2 = await enquiryNewWebsiteCard.value.validateForm()
-        //console.log(sfm2)
-        formsToValidate.push(sfm2)
-    }
-    if (enquiryType.value === 'Redesign of Existing Website') {
-        let sfm3 = await enquiryWebsiteRedesignCard.value.validateForm()
-        //console.log(sfm3)
-        formsToValidate.push(sfm3)
-    }
-    if (enquiryType.value === 'Website Maintenance') {
-        let sfm4 = await enquiryWebsiteMaintenanceCard.value.validateForm()
-        formsToValidate.push(sfm4)
-    }
-    if (enquiryType.value === 'Search Engine Optimisation and Digital Marketing') {
-        let sfm5 = await enquirySEOCard.value.validateForm()
-        formsToValidate.push(sfm5)
-    }
-    if (enquiryType.value === 'Something Else') {
-        let sfm6 = await enquirySomethingElseCard.value.validateForm()
-        formsToValidate.push(sfm6)
-    }
-    let sfm7 = await enquiryFooter.value.validateForm()
-    formsToValidate.push(sfm7)
-
-    Promise.all(formsToValidate).then(result => {
-        //console.log(result)
-        let formValid = true
-        for (const element of result) {
-            if (element.valid === false) {
-                formValid = false
-                break
-            } else {
-                consolidateFormValues = {...consolidateFormValues, ...element.formValues}
-            }
-        }
-        if (formValid === true) {
-            //console.log(consolidateFormValues)
-            saveEnquiry()
-        } else {
-            errorMessage.value.title = "Oops - something doesn't look right."
-            errorMessage.value.description = "Please check that all the fields highlighted with a red asterisk are present, that " +
-                  "there are no error messages showing  and then give it another go."
-            //console.log("failed")
-            flgIsSubmitting.value = false
-        }
-    })
-}
-const saveEnquiry = async () => {
-    try {
-        await storeEnquiry(consolidateFormValues)
-        errorMessage.value.title = null
-        errorMessage.value.description = null
-        flgSubmissionSuccessful.value = true
-        flgIsSubmitting.value = false
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        setTimeout(() => {
-                  //flgSubmissionSuccessful.value = false
-                  router.push({name: "home"})
-              },
-              5000
-        )
-
-    } catch (e) {
-        errorMessage.value = await errorMessageHandler(e)
-        flgIsSubmitting.value = false
-    }
-}
-const changeEnquiryType = (newEnquiryType) => {
-    enquirySelected.value = true
-    enquiryType.value = newEnquiryType
-}
-
-</script>
-
-<style scoped>
-
-</style>

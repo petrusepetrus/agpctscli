@@ -1,3 +1,59 @@
+<script setup lang="ts">
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import {onBeforeMount, ref} from 'vue'
+import {useEnquiryStore} from "../../../stores/enquiryStore.js";
+import moment from "moment";
+import {storeToRefs} from "pinia";
+
+
+let dataLoaded = ref(false)
+const userFound = ref(false)
+
+
+const enquiryStore = useEnquiryStore()
+const {enquiry} = storeToRefs(enquiryStore)
+//console.log(enquiry)
+
+if (enquiryStore.enquiry.user !== null) {
+    userFound.value = true
+}
+
+const getEnquiryStatus = (enquiryStatus) => {
+    switch (enquiryStatus) {
+        case 'New':
+            return "text-red-500"
+        case 'Reviewed':
+            return "text-amber-500"
+        case 'Responded':
+            return "text-green-500"
+        case 'Invited':
+            return 'text-blue-500'
+        default:
+    }
+}
+
+const getUserTypeStatus = (enquiryStatus) => {
+    switch (enquiryStatus) {
+        case 'Inactive':
+            return "text-red-500"
+        case 'Active':
+            return "text-green-500"
+        default:
+    }
+}
+const formatDate = (dateToFormat) => {
+    return moment(dateToFormat).format('DD/MM/YYYY h:mm a');
+}
+
+onBeforeMount(async () => {
+
+    //const enquiryStore = useEnquiryStore()
+    ////console.log(enquiryStore)
+    //const {enquiry} = storeToRefs(enquiryStore.enquiry)
+    dataLoaded.value = true
+
+})
+</script>
 <template>
     <div v-if="dataLoaded===true"
          class="overflow-hidden bg-black rounded-md border-1 shadow-inner shadow-gray-500">
@@ -115,65 +171,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import {onBeforeMount, ref} from 'vue'
-import {useEnquiryStore} from "../../../stores/enquiryStore.js";
-import moment from "moment";
-import {storeToRefs} from "pinia";
-
-
-let dataLoaded = ref(false)
-const userFound = ref(false)
-
-
-const enquiryStore = useEnquiryStore()
-const {enquiry} = storeToRefs(enquiryStore)
-//console.log(enquiry)
-
-if (enquiryStore.enquiry.user !== null) {
-    userFound.value = true
-}
-
-const getEnquiryStatus = (enquiryStatus) => {
-    switch (enquiryStatus) {
-        case 'New':
-            return "text-red-500"
-        case 'Reviewed':
-            return "text-amber-500"
-        case 'Responded':
-            return "text-green-500"
-        case 'Invited':
-            return 'text-blue-500'
-        default:
-    }
-}
-
-const getUserTypeStatus = (enquiryStatus) => {
-    switch (enquiryStatus) {
-        case 'Inactive':
-            return "text-red-500"
-        case 'Active':
-            return "text-green-500"
-        default:
-    }
-}
-const formatDate = (dateToFormat) => {
-    return moment(dateToFormat).format('DD/MM/YYYY h:mm a');
-}
-
-onBeforeMount(async () => {
-
-    //const enquiryStore = useEnquiryStore()
-    ////console.log(enquiryStore)
-    //const {enquiry} = storeToRefs(enquiryStore.enquiry)
-    dataLoaded.value = true
-
-})
-
-</script>
-
-<style scoped>
-
-</style>

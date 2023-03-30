@@ -1,3 +1,449 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+EnquiriesList provides a list and search function showing the details for
+selected Enquiries with the ability to perform basic CRUD
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {ref, reactive, watch, onBeforeMount} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import Sidebar from "../../components/layout/Sidebar.vue";
+import BasePagination from "../../components/ui/BasePagination.vue";
+import BaseSpinner from "../../components/ui/BaseSpinner.vue";
+import BaseCheckbox from "../../components/ui/BaseCheckbox.vue";
+import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
+import BaseWarningMessage from "../../components/ui/BaseWarningMessage.vue";
+import {MagnifyingGlassIcon} from "@heroicons/vue/24/solid";
+import Navbar from "../../components/layout/Navbar.vue"
+import BaseInput from "../../components/ui/BaseInput.vue";
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useMiscService from "../../services/misc/useMiscService.js";
+import {testIfPromise} from "../../utils/GeneralUtilities.js"
+import moment from "moment";
+
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+const props = defineProps({
+    enquiryComment: {},
+    enquiryID: String
+})
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+interface GenericMessage{
+    title:string,
+    description:string,
+}
+let enquiriesList = ref({})
+let paginationData = reactive({
+    current_page :"",
+    last_page :"",
+    next_page_url :"",
+    path :"",
+    per_page :"",
+    prev_page_url :"",
+    from :"",
+    to :"",
+    total :"",
+    links :"",
+})
+let enquiryTypes = ref([])
+let enquirySearchName = ref('')
+let enquiryStatuses = ref([])
+let enquiryTypeSelected = ref([])
+let enquiryStatusSelected = ref([])
+let enquiriesFound = ref(false)
+let flgIsLoading=ref(false)
+let flgIsDeleting = ref(false)
+let errorMessage:GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+let warningMessage:GenericMessage = reactive({
+    title:"",
+    description:"",
+})
+let queryParams = reactive({
+    pageNumber: 0,
+    recordsPerPage: 5,
+    nameQuery: "",
+    enquiryTypeQuery: "",
+    enquiryStatusQuery: "",
+})
+
+const {getEnquiries, getEnquiryTypes, getEnquiryStatuses, deleteEnquiry} = useMiscService()
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+onBeforeMount(async () => {
+          /*
+    retrieve the enquiry types and statuses for the search bar
+     */
+          await loadEnquiryTypes()
+          await loadEnquiryStatuses()
+          /*
+    checkout the page number we are referring to
+     */
+          let stringToBeSearched = document.location.search
+          let searchString = "page="
+          queryParams.pageNumber = Number(stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length))
+          /*
+    get the enquiries corresponding to that page
+     */
+          await getEnquiriesList()
+          if (enquiriesFound.value === false) {
+              warningMessage.title = "No enquiries found"
+              warningMessage.description = "No enquiries match your chosen criteria."
+          } else {
+              /*
+        set up the page to be displayed
+         */
+              if (paginationData.path) {
+                  try {
+                      /*
+                change the browser URL to reflect page number
+                 */
+                      await changePageURL(paginationData.current_page)
+                  } catch (e) {
+                      if (testIfPromise(e)) {
+                          e.then((value) => {
+                              /*
+                    The error handler throws a promise.reject so we need to resolve the promise
+                    to access the error information
+                     */
+                              errorMessage.title = value.title
+                              errorMessage.description = value.description
+                              //errorMessage.description=e
+                          })
+                      } else {
+                          errorMessage.title = e
+                      }
+                  }
+              }
+              /*
+        listen for back or forward button clicks in browser
+         */
+              window.addEventListener('popstate', popstateEventAction);
+          }
+      }
+)
+
+/*===============================================================================*/
+/* Watchers
+/*===============================================================================*/
+watch(enquirySearchName, () => {
+    /*
+    Purpose:
+        on a change in Name search field loads the enquiries list for that filter
+     */
+    queryParams.pageNumber = 1
+    queryParams.nameQuery = enquirySearchName.value
+    /*
+    fetch the qualifying enquiries
+     */
+    getEnquiriesList()
+})
+/*-------------------------------------------------------------------------------*/
+watch(enquiryTypeSelected.value, () => {
+    /*
+    Purpose:
+        on a change in Enquiry Type search field loads the enquiries list for that filter
+     */
+    queryParams.pageNumber = 1
+    queryParams.enquiryTypeQuery = ""
+    let blnFirstParameterAdded = false
+    /*
+    construct the filter based on one or more Enquiry Types being selected
+    */
+    for (let i = 0; i < enquiryTypeSelected.value.length; i++) {
+        if (enquiryTypeSelected.value[i]) {
+            if (!blnFirstParameterAdded) {
+                blnFirstParameterAdded = true
+                queryParams.enquiryTypeQuery = enquiryTypes.value[i].enquiry_type
+            } else {
+                queryParams.enquiryTypeQuery = queryParams.enquiryTypeQuery + ',' + enquiryTypes.value[i].enquiry_type
+            }
+        }
+    }
+    /*
+    fetch the qualifying enquiries
+     */
+    getEnquiriesList()
+})
+/*-------------------------------------------------------------------------------*/
+watch(enquiryStatusSelected.value, () => {
+    /*
+    Purpose:
+        on a change in Enquiry Status search field loads the enquiries list for that filter
+     */
+    queryParams.pageNumber = 1
+    queryParams.enquiryStatusQuery = ""
+    let blnFirstParameterAdded = false
+    /*
+    construct the filter based on one or more Enquiry Statuses being selected
+    */
+    for (let i = 0; i < enquiryStatusSelected.value.length; i++) {
+        if (enquiryStatusSelected.value[i]) {
+            if (!blnFirstParameterAdded) {
+                blnFirstParameterAdded = true
+                queryParams.enquiryStatusQuery = enquiryStatuses.value[i].enquiry_status
+            } else {
+                queryParams.enquiryStatusQuery = queryParams.enquiryStatusQuery + ',' + enquiryStatuses.value[i].enquiry_status
+            }
+        }
+    }
+    /*
+    fetch the qualifying enquiries
+     */
+    getEnquiriesList()
+})
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const getEnquiriesList = async () => {
+    /*
+    Purpose:
+        get the qualifying list of enquiries and set up the pagination information
+        based on the response from the API
+    Parms:
+        Direct:
+            None
+        Indirect:
+            queryParams
+                object containing the constructed query based on the user
+                filters selected
+    */
+    flgIsLoading.value = true
+    enquiriesFound.value = false
+    try {
+        warningMessage.title=""
+        warningMessage.description=""
+        let response = await getEnquiries(queryParams)
+        if (response.data.length === 0) {
+            enquiriesFound.value = false
+            warningMessage.title="No enquiries were found."
+            warningMessage.description="No enquiries were found matching your criteria."
+        } else {
+            enquiriesFound.value = true
+            warningMessage.title = ""
+            enquiriesList.value = response.data
+            paginationData.current_page = response.current_page
+            paginationData.last_page = response.last_page
+            paginationData.next_page_url = response.next_page_url
+            paginationData.path = response.path
+            paginationData.per_page = response.per_page
+            paginationData.prev_page_url = response.prev_page_url
+            paginationData.from = response.from
+            paginationData.to = response.to
+            paginationData.total = response.total
+            paginationData.links = response.links
+        }
+    } catch (e) {
+        if (testIfPromise(e)) {
+            e.then((value) => {
+                /*
+                The error handler throws a promise.reject so we need to resolve the promise
+                to access the error information
+                 */
+                errorMessage.title = value.title
+                errorMessage.description = value.description
+                //errorMessage.description=e
+            })
+        } else {
+            errorMessage.title = e
+        }
+    }
+    flgIsLoading.value = false
+}
+/*-------------------------------------------------------------------------------*/
+const deleteEnquiryFromList = async (enquiryID) => {
+    //console.log("deleteing " + enquiryID)
+    flgIsDeleting.value = true
+    try {
+        await deleteEnquiry(enquiryID)
+        getEnquiriesList()
+        if (enquiriesFound.value !== true && queryParams.pageNumber > 1) {
+            queryParams.pageNumber = queryParams.pageNumber - 1
+            getEnquiriesList()
+            changePageURL(queryParams.pageNumber)
+        } else {
+            warningMessage.title = "No enquiries found"
+            warningMessage.description = "No enquiries match your chosen criteria."
+        }
+    } catch (e) {
+        if (testIfPromise(e)) {
+            e.then((value) => {
+                /*
+                The error handler throws a promise.reject so we need to resolve the promise
+                to access the error information
+                 */
+                errorMessage.title = value.title
+                errorMessage.description = value.description
+                //error.description=e
+            })
+        } else {
+            errorMessage.title = e
+        }
+    }
+    flgIsDeleting.value = false
+}
+/*-------------------------------------------------------------------------------*/
+const pageChange = async (newPage) => {
+    /*
+    Purpose:
+        reloads a new set of Enquiries based on a page change in the pagination component
+        and then silently pushes the corresponding url entry into the windows history
+        without triggering a reload of the page
+    Parms:
+        newPage
+            the destination page Enquiries should be loaded for
+    */
+    queryParams.pageNumber = newPage
+    await getEnquiriesList()
+    if (paginationData.path) {
+        try {
+            changePageURL(newPage)
+        } catch (e) {
+            if (testIfPromise(e)) {
+                e.then((value) => {
+                    /*
+                    The error handler throws a promise.reject so we need to resolve the promise
+                    to access the error information
+                     */
+                    errorMessage.title = value.title
+                    errorMessage.description = value.description
+                    //error.description=e
+                })
+            } else {
+                errorMessage.title = e
+            }
+        }
+    }
+}
+/*-------------------------------------------------------------------------------*/
+const changePageURL = (newPage) => {
+    const url = new URL(window.location);
+    url.searchParams.set('page', newPage);
+    window.history.pushState({}, '', url);
+}
+/*-------------------------------------------------------------------------------*/
+const popstateEventAction = (event) => {
+    /*
+        Purpose:
+            listen for forward or back browser button clicks and reload the
+            enquiries list for the relevant page number
+        Parms:
+            newPage
+                the destination page Enquiries should be loaded for
+        */
+    if (event.state && event.state.replaced === false) {
+        /*
+        extract the page number we have been moved to and
+        set the query page number to that page
+         */
+        let stringToBeSearched = document.location.search
+        let searchString = "page="
+        queryParams.pageNumber = Number(stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length))
+        /*
+        get the required Enquiries
+         */
+        getEnquiriesList()
+    }
+}
+/*-------------------------------------------------------------------------------*/
+const getEnquiryStatus = (enquiryStatus) => {
+    /*
+    Purpose:
+        styles the text for the enquiry status based on its value
+    Parms:
+        enquiryStatus
+            the Enquiry Status we are formatting for
+    */
+    switch (enquiryStatus) {
+        case 'New':
+            return "text-red-500"
+        case 'Reviewed':
+            return "text-amber-500"
+        case 'Responded':
+            return "text-green-500"
+        case 'Invited':
+            return 'text-blue-500'
+        default:
+    }
+}
+
+/*-------------------------------------------------------------------------------*/
+async function loadEnquiryTypes() {
+    /*
+    Purpose:
+        load the Enquiry Types that are available for the search bar
+        functionality
+    Parms:
+        none
+    */
+    try {
+        enquiryTypes.value = await getEnquiryTypes()
+    } catch (e) {
+        e.then((value) => {
+            /*
+            The error handler throws a promise.reject so we need to resolve the promise
+            to access the error information
+             */
+            errorMessage.title = value.title
+            errorMessage.description = value.description
+            //error.description=e
+        })
+    }
+}
+
+/*-------------------------------------------------------------------------------*/
+const loadEnquiryStatuses = async () => {
+    /*
+    Purpose:
+        load the Enquiry Statuses that are available for the search bar
+        functionality
+    Parms:
+        none
+    */
+    try {
+        enquiryStatuses.value = await getEnquiryStatuses()
+    } catch (e) {
+        e.then((value) => {
+            /*
+            The error handler throws a promise.reject so we need to resolve the promise
+            to access the error information
+             */
+            errorMessage.title = value.title
+            errorMessage.description = value.description
+
+            //error.description=e
+        })
+    }
+}
+const formatDate=(date)=>{
+    return moment(String(date)).format('DD/MM/YY')
+}
+/*-------------------------------------------------------------------------------*/
+</script>
 <template>
     <div class="bg-black min-h-screen">
         <Navbar></Navbar>
@@ -204,446 +650,16 @@
                 >
                 </BaseSpinner>
                 <BaseErrorMessage
-                      v-if="error.title"
-                      :error-description=error.description
-                      :error-title=error.title>
+                      v-if="errorMessage.title"
+                      :error-description=errorMessage.description
+                      :error-title=errorMessage.title>
                 </BaseErrorMessage>
                 <BaseWarningMessage
-                      v-if="warning.title"
-                      :warning-title=warning.title
-                      :warning-description=warning.description>
+                      v-if="warningMessage.title"
+                      :warning-title=warningMessage.title
+                      :warning-description=warningMessage.description>
                 </BaseWarningMessage>
             </div>
         </div>
     </div>
 </template>
-
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-EnquiriesList provides a list and search function showing the details for
-selected Enquiries with the ability to perform basic CRUD
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {ref, reactive, watch, onBeforeMount} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import Sidebar from "../../components/layout/Sidebar.vue";
-import BasePagination from "../../components/ui/BasePagination.vue";
-import BaseSpinner from "../../components/ui/BaseSpinner.vue";
-import BaseCheckbox from "../../components/ui/BaseCheckbox.vue";
-import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
-import BaseWarningMessage from "../../components/ui/BaseWarningMessage.vue";
-import {MagnifyingGlassIcon} from "@heroicons/vue/24/solid";
-import Navbar from "../../components/layout/Navbar.vue"
-import BaseInput from "../../components/ui/BaseInput.vue";
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
-import {testIfPromise} from "../../utils/GeneralUtilities.js"
-import moment from "moment";
-
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-const props = defineProps({
-    enquiryComment: {},
-    enquiryID: String
-})
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-let enquiriesList = ref({})
-let paginationData = reactive({})
-let enquiryTypes = ref([])
-let enquirySearchName = ref('')
-let enquiryStatuses = ref([])
-let enquiryTypeSelected = ref([])
-let enquiryStatusSelected = ref([])
-let enquiriesFound = ref(false)
-let flgIsLoading=ref(false)
-let flgIsDeleting = ref(false)
-let error = reactive({})
-let warning = reactive({})
-let queryParams = reactive({
-    pageNumber: 0,
-    recordsPerPage: 5,
-    nameQuery: "",
-    enquiryTypeQuery: "",
-    enquiryStatusQuery: "",
-})
-
-const {getEnquiries, getEnquiryTypes, getEnquiryStatuses, deleteEnquiry} = useMiscService()
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-onBeforeMount(async () => {
-          /*
-    retrieve the enquiry types and statuses for the search bar
-     */
-          await loadEnquiryTypes()
-          await loadEnquiryStatuses()
-          /*
-    checkout the page number we are referring to
-     */
-          let stringToBeSearched = document.location.search
-          let searchString = "page="
-          queryParams.pageNumber = stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length)
-          /*
-    get the enquiries corresponding to that page
-     */
-          await getEnquiriesList()
-          if (enquiriesFound.value === false) {
-              warning.title = "No enquiries found"
-              warning.description = "No enquiries match your chosen criteria."
-          } else {
-              /*
-        set up the page to be displayed
-         */
-              if (paginationData.path) {
-                  try {
-                      /*
-                change the browser URL to reflect page number
-                 */
-                      await changePageURL(paginationData.current_page)
-                  } catch (e) {
-                      if (testIfPromise(e)) {
-                          e.then((value) => {
-                              /*
-                    The error handler throws a promise.reject so we need to resolve the promise
-                    to access the error information
-                     */
-                              error.title = value.title
-                              error.description = value.description
-                              //error.description=e
-                          })
-                      } else {
-                          error.title = e
-                      }
-                  }
-              }
-              /*
-        listen for back or forward button clicks in browser
-         */
-              window.addEventListener('popstate', popstateEventAction);
-          }
-      }
-)
-
-/*===============================================================================*/
-/* Watchers
-/*===============================================================================*/
-watch(enquirySearchName, () => {
-    /*
-    Purpose:
-        on a change in Name search field loads the enquiries list for that filter
-     */
-    queryParams.pageNumber = 1
-    queryParams.nameQuery = enquirySearchName.value
-    /*
-    fetch the qualifying enquiries
-     */
-    getEnquiriesList()
-})
-/*-------------------------------------------------------------------------------*/
-watch(enquiryTypeSelected.value, () => {
-    /*
-    Purpose:
-        on a change in Enquiry Type search field loads the enquiries list for that filter
-     */
-    queryParams.pageNumber = 1
-    queryParams.enquiryTypeQuery = ""
-    let blnFirstParameterAdded = false
-    /*
-    construct the filter based on one or more Enquiry Types being selected
-    */
-    for (let i = 0; i < enquiryTypeSelected.value.length; i++) {
-        if (enquiryTypeSelected.value[i]) {
-            if (!blnFirstParameterAdded) {
-                blnFirstParameterAdded = true
-                queryParams.enquiryTypeQuery = enquiryTypes.value[i].enquiry_type
-            } else {
-                queryParams.enquiryTypeQuery = queryParams.enquiryTypeQuery + ',' + enquiryTypes.value[i].enquiry_type
-            }
-        }
-    }
-    /*
-    fetch the qualifying enquiries
-     */
-    getEnquiriesList()
-})
-/*-------------------------------------------------------------------------------*/
-watch(enquiryStatusSelected.value, () => {
-    /*
-    Purpose:
-        on a change in Enquiry Status search field loads the enquiries list for that filter
-     */
-    queryParams.pageNumber = 1
-    queryParams.enquiryStatusQuery = ""
-    let blnFirstParameterAdded = false
-    /*
-    construct the filter based on one or more Enquiry Statuses being selected
-    */
-    for (let i = 0; i < enquiryStatusSelected.value.length; i++) {
-        if (enquiryStatusSelected.value[i]) {
-            if (!blnFirstParameterAdded) {
-                blnFirstParameterAdded = true
-                queryParams.enquiryStatusQuery = enquiryStatuses.value[i].enquiry_status
-            } else {
-                queryParams.enquiryStatusQuery = queryParams.enquiryStatusQuery + ',' + enquiryStatuses.value[i].enquiry_status
-            }
-        }
-    }
-    /*
-    fetch the qualifying enquiries
-     */
-    getEnquiriesList()
-})
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-const getEnquiriesList = async () => {
-    /*
-    Purpose:
-        get the qualifying list of enquiries and set up the pagination information
-        based on the response from the API
-    Parms:
-        Direct:
-            None
-        Indirect:
-            queryParams
-                object containing the constructed query based on the user
-                filters selected
-    */
-    flgIsLoading.value = true
-    enquiriesFound.value = false
-    try {
-        warning={}
-        let response = await getEnquiries(queryParams)
-        if (response.data.length === 0) {
-            enquiriesFound.value = false
-            warning.title="No enquiries were found."
-            warning.description="No enquiries were found matching your criteria."
-        } else {
-            enquiriesFound.value = true
-            warning.title = ""
-            enquiriesList.value = response.data
-            paginationData.current_page = response.current_page
-            paginationData.last_page = response.last_page
-            paginationData.next_page_url = response.next_page_url
-            paginationData.path = response.path
-            paginationData.per_page = response.per_page
-            paginationData.prev_page_url = response.prev_page_url
-            paginationData.from = response.from
-            paginationData.to = response.to
-            paginationData.total = response.total
-            paginationData.links = response.links
-        }
-    } catch (e) {
-        if (testIfPromise(e)) {
-            e.then((value) => {
-                /*
-                The error handler throws a promise.reject so we need to resolve the promise
-                to access the error information
-                 */
-                error.title = value.title
-                error.description = value.description
-                //error.description=e
-            })
-        } else {
-            error.title = e
-        }
-    }
-    flgIsLoading.value = false
-}
-/*-------------------------------------------------------------------------------*/
-const deleteEnquiryFromList = async (enquiryID) => {
-    //console.log("deleteing " + enquiryID)
-    flgIsDeleting.value = true
-    try {
-        let response = await deleteEnquiry(enquiryID)
-        getEnquiriesList()
-        if (enquiriesFound.value !== true && queryParams.pageNumber > 1) {
-            queryParams.pageNumber = queryParams.pageNumber - 1
-            getEnquiriesList()
-            changePageURL(queryParams.pageNumber)
-        } else {
-            warning.title = "No enquiries found"
-            warning.description = "No enquiries match your chosen criteria."
-        }
-    } catch (e) {
-        if (testIfPromise(e)) {
-            e.then((value) => {
-                /*
-                The error handler throws a promise.reject so we need to resolve the promise
-                to access the error information
-                 */
-                error.title = value.title
-                error.description = value.description
-                //error.description=e
-            })
-        } else {
-            error.title = e
-        }
-    }
-    flgIsDeleting.value = false
-}
-/*-------------------------------------------------------------------------------*/
-const pageChange = async (newPage) => {
-    /*
-    Purpose:
-        reloads a new set of Enquiries based on a page change in the pagination component
-        and then silently pushes the corresponding url entry into the windows history
-        without triggering a reload of the page
-    Parms:
-        newPage
-            the destination page Enquiries should be loaded for
-    */
-    queryParams.pageNumber = newPage
-    await getEnquiriesList()
-    if (paginationData.path) {
-        try {
-            changePageURL(newPage)
-        } catch (e) {
-            if (testIfPromise(e)) {
-                e.then((value) => {
-                    /*
-                    The error handler throws a promise.reject so we need to resolve the promise
-                    to access the error information
-                     */
-                    error.title = value.title
-                    error.description = value.description
-                    //error.description=e
-                })
-            } else {
-                error.title = e
-            }
-        }
-    }
-}
-/*-------------------------------------------------------------------------------*/
-const changePageURL = (newPage) => {
-    const url = new URL(window.location);
-    url.searchParams.set('page', newPage);
-    window.history.pushState({}, '', url);
-}
-/*-------------------------------------------------------------------------------*/
-const popstateEventAction = (event) => {
-    /*
-        Purpose:
-            listen for forward or back browser button clicks and reload the
-            enquiries list for the relevant page number
-        Parms:
-            newPage
-                the destination page Enquiries should be loaded for
-        */
-    if (event.state && event.state.replaced === false) {
-        /*
-        extract the page number we have been moved to and
-        set the query page number to that page
-         */
-        let stringToBeSearched = document.location.search
-        let searchString = "page="
-        queryParams.pageNumber = stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length)
-        /*
-        get the required Enquiries
-         */
-        getEnquiriesList()
-    }
-}
-/*-------------------------------------------------------------------------------*/
-const getEnquiryStatus = (enquiryStatus) => {
-    /*
-    Purpose:
-        styles the text for the enquiry status based on its value
-    Parms:
-        enquiryStatus
-            the Enquiry Status we are formatting for
-    */
-    switch (enquiryStatus) {
-        case 'New':
-            return "text-red-500"
-        case 'Reviewed':
-            return "text-amber-500"
-        case 'Responded':
-            return "text-green-500"
-        case 'Invited':
-            return 'text-blue-500'
-        default:
-    }
-}
-
-/*-------------------------------------------------------------------------------*/
-async function loadEnquiryTypes() {
-    /*
-    Purpose:
-        load the Enquiry Types that are available for the search bar
-        functionality
-    Parms:
-        none
-    */
-    try {
-        enquiryTypes.value = await getEnquiryTypes()
-    } catch (e) {
-        e.then((value) => {
-            /*
-            The error handler throws a promise.reject so we need to resolve the promise
-            to access the error information
-             */
-            error.title = value.title
-            error.description = value.description
-            //error.description=e
-        })
-    }
-}
-
-/*-------------------------------------------------------------------------------*/
-const loadEnquiryStatuses = async () => {
-    /*
-    Purpose:
-        load the Enquiry Statuses that are available for the search bar
-        functionality
-    Parms:
-        none
-    */
-    try {
-        enquiryStatuses.value = await getEnquiryStatuses()
-    } catch (e) {
-        e.then((value) => {
-            /*
-            The error handler throws a promise.reject so we need to resolve the promise
-            to access the error information
-             */
-            error.title = value.title
-            error.description = value.description
-
-            //error.description=e
-        })
-    }
-}
-const formatDate=(date)=>{
-    return moment(String(date)).format('DD/MM/YY')
-}
-/*-------------------------------------------------------------------------------*/
-
-</script>
-
-<style scoped>
-
-</style>

@@ -1,30 +1,3 @@
-<template>
-    <Navbar></Navbar>
-    <div class="bg-black">
-        <main>
-            <!-- Introduction -->
-            <Introduction/>
-
-            <!-- Feature section with grid -->
-            <Features/>
-
-
-            <!-- Testimonial section -->
-            <Testimonials/>
-
-            <!-- Process section -->
-            <Methodology/>
-
-
-            <!-- CTA Section -->
-            <CallToAction/>
-        </main>
-
-    </div>
-
-    <Footerbar></Footerbar>
-</template>
-
 <script setup lang="ts">
 import {useAuthStore} from "../../stores/AuthStore.js";
 import Navbar from "../../components/layout/Navbar.vue";
@@ -139,7 +112,29 @@ const footerNavigation = {
 }
 
 </script>
+<template>
+    <Navbar></Navbar>
+    <div class="bg-black">
+        <main>
+            <!-- Introduction -->
+            <Introduction/>
 
-<style scoped>
+            <!-- Feature section with grid -->
+            <Features/>
 
-</style>
+
+            <!-- Testimonial section -->
+            <Testimonials/>
+
+            <!-- Process section -->
+            <Methodology/>
+
+
+            <!-- CTA Section -->
+            <CallToAction/>
+        </main>
+
+    </div>
+
+    <Footerbar></Footerbar>
+</template>

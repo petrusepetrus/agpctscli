@@ -1,3 +1,5 @@
+<script setup lang="ts">
+</script>
 <template>
     <div class="relative bg-black">
         <div class="relative h-56 bg-black sm:h-72 md:absolute md:left-0 md:h-full md:w-1/2">
@@ -36,11 +38,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-
-</script>
-
-<style scoped>
-
-</style>

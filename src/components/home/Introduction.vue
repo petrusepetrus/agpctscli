@@ -1,3 +1,5 @@
+<script setup lang="ts">
+</script>
 <template>
     <div class="bg-black pt-10 sm:pt-16 lg:overflow-hidden lg:pt-8 lg:pb-14">
         <div class="mx-auto max-w-7xl lg:px-8">
@@ -50,11 +52,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-
-</script>
-
-<style scoped>
-
-</style>

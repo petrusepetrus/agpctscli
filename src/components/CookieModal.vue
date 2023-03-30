@@ -1,66 +1,4 @@
-<template>
-    <div v-if="openModal">
-        <div class="grid place-items-center">
-            <div
-                  class="fixed bottom-0 z-10 transform overflow-hidden rounded-lg
-                    bg-gradient-to-r from-teal-600 to-cyan-600 px-8 pt-5 pb-4 text-left shadow-xl transition-all
-                    max-w-3xl"
-                  ref="trapRef"
-                  role="dialog"
-            >
-                <div class="grid grid-cols-12">
-                    <div class="md:col-span-1  md:h-8 md:w-8 sm:h-6 sm:w-6 items-center rounded-full bg-white  sm:col-span-3 ">
-                        <ExclamationCircleIcon class="md:h-8 md:w-8 sm:h-4 sm:w-4 align-middle text-red-600"
-                                               aria-hidden="true"/>
-                    </div>
-                    <h3 class="md:col-span-10 col-span-8 md:text-left text-center text-lg font-medium text-white">Cookie
-                        Consent</h3>
-                </div>
-                <div>
-                    <div>
-
-                    </div>
-                    <div class="mt-2">
-                    <span class="text-sm text-white"
-                    >
-                        This website uses cookies to improve your customer experience
-                        (please refer to our
-                        <router-link
-                              to="/data-usage-policy"
-                              :active-class="'border-gray-900 text-gray-900 inline-flex items-center border-b-2 border-t-0 text-sm font-medium'"
-                              class="border-gray-300 border-b-2 text-sm text-white hover:text-gray-900"
-                        > Data Usage Policy</router-link> for more
-                        information). To use the site please accept either Essential or All cookies.
-                    </span>
-                    </div>
-                </div>
-                <form
-                      novalidate class="mt-2">
-                    <div class="mt-5 sm:mt-4 sm:flex ">
-                        <BaseRadioGroup
-                              v-model="cookieOptionSelected"
-                              name="cookieOptionGroup"
-                              :model-value="cookieOptionSelected"
-                              :options="cookieOptions"
-                              :vertical="true"
-                        ></BaseRadioGroup>
-                        <BaseButton
-                              @click.prevent="acceptCookies"
-                              title="Accept Cookies"
-                              input-class="bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-500 hover:to-gray-300
-                                w-32 inline-flex w-full justify-center rounded-md border md:mt-0  sm:mt-32 m-2"
-                        >
-                            Submit form
-                        </BaseButton>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-</template>
-
-<script setup>
+<script setup lang="ts">
 /* Overview
 -------------------------------------------------------------------------------
 UserReview enables the management of a selected Enquiry
@@ -72,7 +10,6 @@ UserReview enables the management of a selected Enquiry
 /* Vue
 /*-------------------------------------------------------------------------------*/
 import {ref, watch} from 'vue'
-
 /*-------------------------------------------------------------------------------*/
 /* Router
 /*-------------------------------------------------------------------------------*/
@@ -176,9 +113,64 @@ const acceptCookies = () => {
 /*===============================================================================*/
 /* Watches
 /*===============================================================================*/
-watch(cookieOptionSelected,(value, oldValue)=>{
-          //console.log(value + " " + oldValue)
-      }
-)
-
 </script>
+<template>
+    <div v-if="openModal">
+        <div class="grid place-items-center">
+            <div
+                  class="fixed bottom-0 z-10 transform overflow-hidden rounded-lg
+                    bg-gradient-to-r from-teal-600 to-cyan-600 px-8 pt-5 pb-4 text-left shadow-xl transition-all
+                    max-w-3xl"
+                  ref="trapRef"
+                  role="dialog"
+            >
+                <div class="grid grid-cols-12">
+                    <div class="md:col-span-1  md:h-8 md:w-8 sm:h-6 sm:w-6 items-center rounded-full bg-white  sm:col-span-3 ">
+                        <ExclamationCircleIcon class="md:h-8 md:w-8 sm:h-4 sm:w-4 align-middle text-red-600"
+                                               aria-hidden="true"/>
+                    </div>
+                    <h3 class="md:col-span-10 col-span-8 md:text-left text-center text-lg font-medium text-white">Cookie
+                        Consent</h3>
+                </div>
+                <div>
+                    <div>
+
+                    </div>
+                    <div class="mt-2">
+                    <span class="text-sm text-white"
+                    >
+                        This website uses cookies to improve your customer experience
+                        (please refer to our
+                        <router-link
+                              to="/data-usage-policy"
+                              :active-class="'border-gray-900 text-gray-900 inline-flex items-center border-b-2 border-t-0 text-sm font-medium'"
+                              class="border-gray-300 border-b-2 text-sm text-white hover:text-gray-900"
+                        > Data Usage Policy</router-link> for more
+                        information). To use the site please accept either Essential or All cookies.
+                    </span>
+                    </div>
+                </div>
+                <form
+                      novalidate class="mt-2">
+                    <div class="mt-5 sm:mt-4 sm:flex ">
+                        <BaseRadioGroup
+                              v-model="cookieOptionSelected"
+                              name="cookieOptionGroup"
+                              :model-value="cookieOptionSelected"
+                              :options="cookieOptions"
+                              :vertical="true"
+                        ></BaseRadioGroup>
+                        <BaseButton
+                              @click.prevent="acceptCookies"
+                              title="Accept Cookies"
+                              input-class="bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-500 hover:to-gray-300
+                                w-32 inline-flex w-full justify-center rounded-md border md:mt-0  sm:mt-32 m-2"
+                        >
+                            Submit form
+                        </BaseButton>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>

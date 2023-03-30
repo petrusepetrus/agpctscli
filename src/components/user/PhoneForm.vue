@@ -203,6 +203,8 @@ if (props.userPhone != null) {
 }
 /*
 Initialise the userID we are dealing with
+*/
+/**
 TODO
 we should accept this as a prop to make the component reusable
 */
@@ -274,7 +276,7 @@ let {value: preferred_contact_number} = useField('preferred_contact_number')
 let {value: international_dialling_code} = useField('international_dialling_code')
 
 watch(country, (countryValue)=>{
-    for (const [key, value] of Object.entries(countriesFull.value)) {
+    for (const [, value] of Object.entries(countriesFull.value)) {
         if (countryValue === value.country) {
             //console.log(value)
             international_dialling_code.value = value.international_dialling_code
@@ -311,7 +313,7 @@ const onSubmit = handleSubmit(async (values) => {
     /*
     Pull out the country and phone type ids to be stored
      */
-    for (const [key, value] of Object.entries(countriesFull.value)) {
+    for (const [, value] of Object.entries(countriesFull.value)) {
         if (value.country === country.value) {
             values.country_id = (value.id)
 

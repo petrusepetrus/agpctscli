@@ -2,7 +2,7 @@
     <VerifyEmailForm></VerifyEmailForm>
 </template>
 
-<script setup>
+<script setup lang="ts">
 
 import VerifyEmailForm from "../../components/auth/VerifyEmailForm.vue";
 

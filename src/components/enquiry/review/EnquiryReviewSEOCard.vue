@@ -1,10 +1,19 @@
+<script setup>
+
+import {useEnquiryStore} from "../../../stores/EnquiryStore.js"
+import BaseCheckbox from "../../ui/BaseCheckbox.vue";
+import {storeToRefs} from "pinia";
+
+const enquiryStore = useEnquiryStore()
+const {enquiry} = storeToRefs(enquiryStore)
+</script>
 <template>
     <div class="overflow-hidden p-4 bg-black rounded-md border-1 shadow-inner shadow-gray-500">
         <div class="overflow-hidden p-4 bg-black rounded-md border-1">
             <dl class="gap-y-8">
-                <h2 class="text-lg font-medium leading-6 text-teal-500">
+                <div class="text-lg font-medium leading-6 text-teal-500">
                     {{ enquiry.enquiry_type.enquiry_type }} Enquiry Details
-                </h2>
+                </div>
                 <div class="mt-4">
                     <dt class="text-sm font-medium text-gray-400">Enquiry</dt>
                     <dd class="mt-1 text-sm text-gray-300">{{ enquiry.enquiry }}</dd>
@@ -145,18 +154,3 @@
         </div>
     </div>
 </template>
-
-<script setup>
-
-import {useEnquiryStore} from "../../../stores/EnquiryStore.js"
-import BaseCheckbox from "../../ui/BaseCheckbox.vue";
-import BaseInput from "../../ui/BaseInput.vue";
-import {storeToRefs} from "pinia";
-
-const enquiryStore = useEnquiryStore()
-const {enquiry} = storeToRefs(enquiryStore)
-</script>
-
-<style scoped>
-
-</style>

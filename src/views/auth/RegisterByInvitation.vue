@@ -2,7 +2,7 @@
         <RegisterByInvitationForm></RegisterByInvitationForm>
 </template>
 
-<script setup>
+<script setup lang="ts">
 
 import RegisterByInvitationForm from "../../components/auth/RegisterByInvitationForm.vue";
 

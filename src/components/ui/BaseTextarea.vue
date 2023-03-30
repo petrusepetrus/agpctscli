@@ -40,7 +40,7 @@
 
 <script>
 import SetupFormComponent from "../../utils/SetupFormComponent";
-import UniqueID from "../../utils/UniqueID";
+import UniqueID from "../../utils/UniqueID.js";
 import {ExclamationCircleIcon} from '@heroicons/vue/24/solid'
 import BaseInputErrorMessage from "./BaseInputErrorMessage.vue";
 

@@ -333,7 +333,7 @@ const onSubmit = handleSubmit(async (values) => {
     /*
     Pull out the country and address type ids to be stored
      */
-    for (const [key, value] of Object.entries(countriesFull.value)) {
+    for (const [, value] of Object.entries(countriesFull.value)) {
         if (value.country === country.value) {
             values.country_id = (value.id)
 
@@ -411,7 +411,7 @@ async function initialiseForm() {
     } else {
         try {
             address_types.value = await getAvailableAddressTypes(props.userID)
-            /*
+            /**
             TODO
             Pull out the first of the remaining address types to pre-populate field
             and mirror in PhoneForm

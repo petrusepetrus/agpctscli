@@ -1,3 +1,335 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+UserList provides a list and search function showing the user details for
+selected users with the ability to perform basic CRUD
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+import {ref, reactive, watch, onBeforeMount} from "vue";
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import BaseButton from "../../components/ui/BaseButton.vue";
+import Sidebar from "../../components/layout/Sidebar.vue";
+import BasePagination from "../../components/ui/BasePagination.vue";
+import BaseSpinner from "../../components/ui/BaseSpinner.vue";
+import BaseCheckbox from "../../components/ui/BaseCheckbox.vue";
+import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
+import BaseWarningMessage from "../../components/ui/BaseWarningMessage.vue";
+import BaseInput from "../../components/ui/BaseInput.vue";
+import {CheckCircleIcon, MagnifyingGlassIcon} from '@heroicons/vue/24/solid'
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useMiscService from "../../services/misc/useMiscService.js";
+import useUserService from "../../services/useUserService.js";
+import {testIfPromise} from "../../utils/GeneralUtilities.js"
+import Navbar from "../../components/layout/Navbar.vue";
+
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+let usersList = ref({})
+let paginationData = reactive({
+    current_page :"",
+    last_page :"",
+    next_page_url :"",
+    path :"",
+    per_page :"",
+    prev_page_url :"",
+    from :"",
+    to :"",
+    total :"",
+    links :"",
+})
+let userTypes = ref([])
+let userSearchName = ref('')
+let userTypeStatuses = ref([])
+let userTypeSelected = ref([])
+let userTypeStatusSelected = ref([])
+let usersFound = ref(false)
+let flgIsLoading = ref(false)
+let flgIsDeleting = ref(false)
+let errorMessage = reactive({
+    title:"",
+    description:"",
+})
+let warningMessage = reactive({
+    title:"",
+    description:"",
+})
+let queryParams = reactive({
+    pageNumber: 1,
+    recordsPerPage: 5,
+    nameQuery: "",
+    userTypeQuery: "",
+    userTypeStatusQuery:"",
+})
+
+const {getUsers, getUserTypes, getUserTypeStatuses} = useUserService()
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+onBeforeMount(async () => {
+          flgIsLoading.value = true
+          /*
+    Fetch the user types and statuses for the search bar
+     */
+          await loadUserTypes()
+          await loadUserTypeStatuses()
+          /*
+checkout the page number we are referring to
+*/
+          //console.log(window.location)
+          let stringToBeSearched = window.location.search
+          //console.log(stringToBeSearched)
+          let searchString = "page="
+          queryParams.pageNumber = Number(stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length))
+          //console.log(queryParams.pageNumber)
+          if (queryParams.pageNumber === 0) {
+              queryParams.pageNumber = 1
+              changePageURL(1)
+          }
+          await getUsersList()
+          //console.log(paginationData.path)
+          if (usersFound.value === false) {
+              warningMessage.title = "No users found"
+              warningMessage.description = "No users match your chosen criteria."
+          } else {
+              if (paginationData.path) {
+                  try {
+                      /*
+                change the browser URL to reflect page number
+                */
+                      //await changePageURL(paginationData.current_page)
+                  } catch (e) {
+                      if (testIfPromise(e)) {
+                          e.then((value) => {
+                              /*
+                        The error handler throws a promise.reject so we need to resolve the promise
+                        to access the error information
+                         */
+                              errorMessage.title = value.title
+                              errorMessage.description = value.description
+                              //errorMessage.description=e
+                          })
+                      } else {
+                          errorMessage.title = e
+                      }
+                  }
+              }
+              flgIsLoading.value = false
+              ////console.log(userTypes)
+              window.addEventListener('popstate', popstateEventAction);
+          }
+      }
+)
+/*===============================================================================*/
+/* Watchers
+/*===============================================================================*/
+watch(userSearchName, () => {
+    queryParams.pageNumber = 1
+    queryParams.nameQuery = userSearchName.value
+    getUsersList()
+})
+/*-------------------------------------------------------------------------------*/
+watch(userTypeSelected.value, () => {
+    queryParams.pageNumber = 1
+    queryParams.userTypeQuery = ""
+    let blnFirstParameterAdded = false
+    for (let i = 0; i < userTypeSelected.value.length; i++) {
+        if (userTypeSelected.value[i]) {
+            if (!blnFirstParameterAdded) {
+                blnFirstParameterAdded = true
+                queryParams.userTypeQuery = userTypes.value[i].user_type
+            } else {
+                queryParams.userTypeQuery = queryParams.userTypeQuery + ',' + userTypes.value[i].user_type
+            }
+        }
+    }
+    getUsersList()
+})
+/*-------------------------------------------------------------------------------*/
+watch(userTypeStatusSelected.value, () => {
+    queryParams.pageNumber = 1
+    queryParams.userTypeStatusQuery = ""
+    let blnFirstParameterAdded = false
+    for (let i = 0; i < userTypeStatusSelected.value.length; i++) {
+        if (userTypeStatusSelected.value[i]) {
+            if (!blnFirstParameterAdded) {
+                blnFirstParameterAdded = true
+                queryParams.userTypeStatusQuery = userTypeStatuses.value[i].user_type_status
+            } else {
+                queryParams.userTypeStatusQuery = queryParams.userTypeStatusQuery + ',' + userTypeStatuses.value[i].user_type_status
+            }
+        }
+    }
+    getUsersList()
+})
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const getUsersList = async () => {
+    flgIsLoading.value = true
+    usersFound.value = false
+    try {
+        warningMessage.title=""
+        warningMessage.description=""
+        let response = await getUsers(queryParams)
+        if (response.data.length === 0) {
+            usersFound.value = false
+            warningMessage.title="No users were found."
+            warningMessage.description="No users were found matching your criteria."
+        } else {
+            usersFound.value = true
+            warningMessage.title = ""
+            usersList.value = response.data
+            paginationData.current_page = response.current_page
+            paginationData.last_page = response.last_page
+            paginationData.next_page_url = response.next_page_url
+            paginationData.path = response.path
+            paginationData.per_page = response.per_page
+            paginationData.prev_page_url = response.prev_page_url
+            paginationData.from = response.from
+            paginationData.to = response.to
+            paginationData.total = response.total
+            paginationData.links = response.links
+        }
+    } catch (e) {
+        if (testIfPromise(e)) {
+            e.then((value) => {
+                /*
+                The error handler throws a promise.reject so we need to resolve the promise
+                to access the error information
+                 */
+                errorMessage.title = value.title
+                errorMessage.description = value.description
+                //errorMessage.description=e
+            })
+        } else {
+            errorMessage.title = e
+        }
+    }
+    flgIsLoading.value = false
+}
+/*-------------------------------------------------------------------------------*/
+const pageChange = async (newPage) => {
+    queryParams.pageNumber = newPage
+    await getUsersList()
+    console.log(paginationData.path)
+    if (paginationData.path) {
+        try {
+            //changePageURL(newPage)
+        } catch (e) {
+            if (testIfPromise(e)) {
+                e.then((value) => {
+                    /*
+                    The errorMessage handler throws a promise.reject so we need to resolve the promise
+                    to access the error information
+                     */
+                    errorMessage.title = value.title
+                    errorMessage.description = value.description
+                    //errorMessage.description=e
+                })
+            } else {
+                errorMessage.title = e
+            }
+        }
+    }
+}
+/*-------------------------------------------------------------------------------*/
+const changePageURL = (newPage) => {
+    const url = new URL(window.location);
+    url.searchParams.set('page', newPage);
+    //console.log(url)
+    window.history.pushState({}, '', url);
+}
+
+const popstateEventAction = (event) => {
+    /*
+    Purpose:
+        listen for forward or back browser button clicks and reload the
+        users list for the relevant page number
+    Parms:
+        newPage
+            the destination page users should be loaded for
+    */
+    if (event.state && event.state.replaced === false) {
+        let stringToBeSearched = document.location.search
+        let searchString = "page="
+        let pageNumber = Number(stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length))
+        queryParams.pageNumber = pageNumber
+        getUsersList()
+    }
+
+}
+const getUserTypeStatus = (userTypeStatus) => {
+    switch (userTypeStatus) {
+        case 'Active':
+            return "h-4 w-4 text-green-400"
+        case 'Inactive':
+            return "h-4 w-4 text-red-400"
+        default:
+    }
+}
+
+const addUser = () => {
+    //console.log("adding user")
+    //router.push({name: 'user-profile', params: {userID: 'new'}})
+}
+
+async function loadUserTypes() {
+    try {
+        userTypes.value = await getUserTypes()
+    } catch (e) {
+        //console.log("error found")
+        e.then((value) => {
+            /*
+            The error handler throws a promise.reject so we need to resolve the promise
+            to access the error information
+             */
+            //console.log(value)
+            errorMessage.title = value.title
+            errorMessage.description = value.description
+            //errorMessage.description=e
+        })
+    }
+}
+
+const loadUserTypeStatuses = async () => {
+    try {
+        userTypeStatuses.value = await getUserTypeStatuses()
+    } catch (e) {
+        e.then((value) => {
+            /*
+            The error handler throws a promise.reject so we need to resolve the promise
+            to access the error information
+             */
+            errorMessage.title = value.title
+            errorMessage.description = value.description
+            //errorMessage.description=e
+        })
+    }
+}
+
+</script>
 <template>
     <div class="bg-black min-h-screen">
         <Navbar></Navbar>
@@ -190,335 +522,16 @@
                 >
                 </BaseSpinner>
                 <BaseErrorMessage
-                      v-if="error.title"
-                      :error-description=error.description
-                      :error-title=error.title>
+                      v-if="errorMessage.title"
+                      :error-description=errorMessage.description
+                      :error-title=errorMessage.title>
                 </BaseErrorMessage>
                 <BaseWarningMessage
-                      v-if="warning.title"
-                      :warning-title=warning.title
-                      :warning-description=warning.description>
+                      v-if="warningMessage.title"
+                      :warning-title=warningMessage.title
+                      :warning-description=warningMessage.description>
                 </BaseWarningMessage>
             </div>
         </div>
     </div>
-
-
 </template>
-
-<script setup>
-/* Overview
--------------------------------------------------------------------------------
-UserList provides a list and search function showing the user details for
-selected users with the ability to perform basic CRUD
--------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Imports
-/*===============================================================================*/
-/* Vue
-/*-------------------------------------------------------------------------------*/
-import {ref, reactive, watch, onBeforeMount} from "vue";
-/*-------------------------------------------------------------------------------*/
-/* Router
-/*-------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------*/
-/* Components
-/*-------------------------------------------------------------------------------*/
-import BaseButton from "../../components/ui/BaseButton.vue";
-import Sidebar from "../../components/layout/Sidebar.vue";
-import BasePagination from "../../components/ui/BasePagination.vue";
-import BaseSpinner from "../../components/ui/BaseSpinner.vue";
-import BaseCheckbox from "../../components/ui/BaseCheckbox.vue";
-import BaseErrorMessage from "../../components/ui/BaseErrorMessage.vue";
-import BaseWarningMessage from "../../components/ui/BaseWarningMessage.vue";
-import BaseInput from "../../components/ui/BaseInput.vue";
-import {CheckCircleIcon, MagnifyingGlassIcon} from '@heroicons/vue/24/solid'
-/*-------------------------------------------------------------------------------*/
-/* Services and Utilities
-/*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
-import useUserService from "../../services/useUserService.js";
-import {testIfPromise} from "../../utils/GeneralUtilities.js"
-import Navbar from "../../components/layout/Navbar.vue";
-
-/*-------------------------------------------------------------------------------*/
-/* Stores
-/*-------------------------------------------------------------------------------*/
-/*===============================================================================*/
-/* Props
-/*===============================================================================*/
-/*===============================================================================*/
-/* Emits
-/*===============================================================================*/
-/*===============================================================================*/
-/* Variable Declaration and Initialisation
-/*===============================================================================*/
-let usersList = ref({})
-let paginationData = reactive({})
-let userTypes = ref([])
-let userSearchName = ref('')
-let userTypeStatuses = ref([])
-let userTypeSelected = ref([])
-let userTypeStatusSelected = ref([])
-let usersFound = ref(false)
-let flgIsLoading = ref(false)
-let flgIsDeleting = ref(false)
-let error = reactive({})
-let warning = reactive({})
-let queryParams = reactive({
-    pageNumber: 1,
-    recordsPerPage: 5,
-    nameQuery: "",
-    userTypeQuery: ""
-})
-
-const {getUsers, getUserTypes, getUserTypeStatuses} = useUserService()
-
-/*===============================================================================*/
-/* Lifecycle Hooks
-/*===============================================================================*/
-onBeforeMount(async () => {
-          flgIsLoading.value = true
-          /*
-    Fetch the user types and statuses for the search bar
-     */
-          await loadUserTypes()
-          await loadUserTypeStatuses()
-          /*
-checkout the page number we are referring to
-*/
-          console.log(window.location)
-          let stringToBeSearched = window.location.search
-          console.log(stringToBeSearched)
-          let searchString = "page="
-          queryParams.pageNumber = stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length)
-          console.log(queryParams.pageNumber)
-          if (queryParams.pageNumber === "") {
-              queryParams.pageNumber = 1
-          }
-          await getUsersList()
-          console.log(paginationData.path)
-          if (usersFound.value === false) {
-              warning.title = "No users found"
-              warning.description = "No users match your chosen criteria."
-          } else {
-              if (paginationData.path) {
-                  try {
-                      /*
-                change the browser URL to reflect page number
-                */
-                      //await changePageURL(paginationData.current_page)
-                  } catch (e) {
-                      if (testIfPromise(e)) {
-                          e.then((value) => {
-                              /*
-                        The error handler throws a promise.reject so we need to resolve the promise
-                        to access the error information
-                         */
-                              error.title = value.title
-                              error.description = value.description
-                              //error.description=e
-                          })
-                      } else {
-                          error.title = e
-                      }
-                  }
-              }
-              flgIsLoading.value = false
-              ////console.log(userTypes)
-              window.addEventListener('popstate', popstateEventAction);
-          }
-      }
-)
-/*===============================================================================*/
-/* Watchers
-/*===============================================================================*/
-watch(userSearchName, () => {
-    queryParams.pageNumber = 1
-    queryParams.nameQuery = userSearchName.value
-    getUsersList()
-})
-/*-------------------------------------------------------------------------------*/
-watch(userTypeSelected.value, () => {
-    queryParams.pageNumber = 1
-    queryParams.userTypeQuery = ""
-    let blnFirstParameterAdded = false
-    for (let i = 0; i < userTypeSelected.value.length; i++) {
-        if (userTypeSelected.value[i]) {
-            if (!blnFirstParameterAdded) {
-                blnFirstParameterAdded = true
-                queryParams.userTypeQuery = userTypes.value[i].user_type
-            } else {
-                queryParams.userTypeQuery = queryParams.userTypeQuery + ',' + userTypes.value[i].user_type
-            }
-        }
-    }
-    getUsersList()
-})
-/*-------------------------------------------------------------------------------*/
-watch(userTypeStatusSelected.value, () => {
-    queryParams.pageNumber = 1
-    queryParams.userTypeStatusQuery = ""
-    let blnFirstParameterAdded = false
-    for (let i = 0; i < userTypeStatusSelected.value.length; i++) {
-        if (userTypeStatusSelected.value[i]) {
-            if (!blnFirstParameterAdded) {
-                blnFirstParameterAdded = true
-                queryParams.userTypeStatusQuery = userTypeStatuses.value[i].user_type_status
-            } else {
-                queryParams.userTypeStatusQuery = queryParams.userTypeStatusQuery + ',' + userTypeStatuses.value[i].user_type_status
-            }
-        }
-    }
-    getUsersList()
-})
-/*===============================================================================*/
-/* Functions
-/*===============================================================================*/
-const getUsersList = async () => {
-    flgIsLoading.value = true
-    usersFound.value = false
-    try {
-        warning= {}
-        let response = await getUsers(queryParams)
-        if (response.data.length === 0) {
-            usersFound.value = false
-            warning.title="No users were found."
-            warning.description="No users were found matching your criteria."
-        } else {
-            usersFound.value = true
-            warning.title = ""
-            usersList.value = response.data
-            paginationData.current_page = response.current_page
-            paginationData.last_page = response.last_page
-            paginationData.next_page_url = response.next_page_url
-            paginationData.path = response.path
-            paginationData.per_page = response.per_page
-            paginationData.prev_page_url = response.prev_page_url
-            paginationData.from = response.from
-            paginationData.to = response.to
-            paginationData.total = response.total
-            paginationData.links = response.links
-        }
-    } catch (e) {
-        if (testIfPromise(e)) {
-            e.then((value) => {
-                /*
-                The error handler throws a promise.reject so we need to resolve the promise
-                to access the error information
-                 */
-                error.title = value.title
-                error.description = value.description
-                //error.description=e
-            })
-        } else {
-            error.title = e
-        }
-    }
-    flgIsLoading.value = false
-}
-/*-------------------------------------------------------------------------------*/
-const pageChange = async (newPage) => {
-    queryParams.pageNumber = newPage
-    await getUsersList()
-    console.log(paginationData.path)
-    if (paginationData.path) {
-        try {
-            //changePageURL(newPage)
-        } catch (e) {
-            if (testIfPromise(e)) {
-                e.then((value) => {
-                    /*
-                    The error handler throws a promise.reject so we need to resolve the promise
-                    to access the error information
-                     */
-                    error.title = value.title
-                    error.description = value.description
-                    //error.description=e
-                })
-            } else {
-                error.title = e
-            }
-        }
-    }
-}
-/*-------------------------------------------------------------------------------*/
-const changePageURL = (newPage) => {
-    const url = new URL(window.location);
-    url.searchParams.set('page', newPage);
-    console.log(url)
-    window.history.pushState({}, '', url);
-}
-
-const popstateEventAction = (event) => {
-    /*
-    Purpose:
-        listen for forward or back browser button clicks and reload the
-        users list for the relevant page number
-    Parms:
-        newPage
-            the destination page users should be loaded for
-    */
-    if (event.state && event.state.replaced === false) {
-        let stringToBeSearched = document.location.search
-        let searchString = "page="
-        let pageNumber = stringToBeSearched.substring(stringToBeSearched.search(searchString) + searchString.length, stringToBeSearched.length)
-        queryParams.pageNumber = pageNumber
-        getUsersList()
-    }
-
-}
-const getUserTypeStatus = (userTypeStatus) => {
-    switch (userTypeStatus) {
-        case 'Active':
-            return "h-4 w-4 text-green-400"
-        case 'Inactive':
-            return "h-4 w-4 text-red-400"
-        default:
-    }
-}
-
-const addUser = () => {
-    //console.log("adding user")
-    router.push({name: 'user-profile', params: {userID: 'new'}})
-}
-
-async function loadUserTypes() {
-    try {
-        userTypes.value = await getUserTypes()
-    } catch (e) {
-        //console.log("error found")
-        e.then((value) => {
-            /*
-            The error handler throws a promise.reject so we need to resolve the promise
-            to access the error information
-             */
-            //console.log(value)
-            error.title = value.title
-            error.description = value.description
-            //error.description=e
-        })
-    }
-}
-
-const loadUserTypeStatuses = async () => {
-    try {
-        userTypeStatuses.value = await getUserTypeStatuses()
-    } catch (e) {
-        e.then((value) => {
-            /*
-            The error handler throws a promise.reject so we need to resolve the promise
-            to access the error information
-             */
-            error.title = value.title
-            error.description = value.description
-            //error.description=e
-        })
-    }
-}
-
-</script>
-
-<style scoped>
-
-</style>

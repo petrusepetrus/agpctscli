@@ -1,110 +1,7 @@
-<template>
-    <Navbar/>
-    <div class="bg-black bg-black pt-10 sm:pt-16 lg:overflow-hidden lg:pt-8 lg:pb-14">
-        <div class="mx-auto max-w-7xl lg:px-8">
-            <div class=" mt-4 bg-white lg:mx-auto lg:grid grid-cols-2  lg:grid-flow-col-dense lg:grid-cols-2 rounded-lg  ">
-                <div class="px-8 col-span-1 bg-white my-8 rounded-lg">
-                    <div class="lg:order-first lg:row-span-2 mt-4">
-                        <h1 class="text-4xl font-bold tracking-tight text-teal-800  sm:text-5xl">
-                            I’m Peter and I live in Cheshire, where I run my web design business.
-                        </h1>
-                        <div class="mt-12 space-y-7 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
-                            <div class="">
-                                I started my web design and development business, <span class="font-medium text-cyan-600">Agapanthus Consulting</span>,
-                                in 2016 after spending a little over 30 years working in the IT Services industry, largely in and around large scale
-                                business transformation programmes.
-                                <div class="text-sm mt-2 text-teal-700 ">(If you're interested in
-                                    finding
-                                    out more about my earlier career then check out my
-                                    <a
-                                          href="https://www.linkedin.com/in/peter-stone-3a58762"
-                                          target=”_blank”
-                                          class="font-bold text-cyan-600 hover:text-cyan-400"
-                                    >LinkedIn
-                                    </a> profile for more information).
-                                </div>
-                                </div>
-                            <p class="">
-                                I now work predominantly with small businesses that are looking to
-                                create an integrated digital footprint across
-                                their website and digital marketing channels.
-                            </p>
-                            <p class="">
-                                I love working with my clients. Each business is unique and trying to understand
-                                what it does, where the client is trying to take it and the issues they
-                                are wrestling with can be interesting, challenging and exciting.
-                                </p>
-                            <p>I enjoy trying to come up with innovative ways to use technology
-                                as part of these transformations and helping clients get a consistent presentation of
-                                their brand across their various marketing activities.
-                            </p>
-                            <p class="">
-                                When I'm not working, I enjoy taking in the countryside around
-                                the village where I live - particularly when a visit to a pub or cafe is involved! I enjoy
-                                cycling and when I get the chance, sailing is also a firm favourite. And if the weather's not so good
-                                then I enjoy reading, playing the guitar and cooking - though not necessarily all
-                                at the same time!
-                            </p>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="px-24 col-span-1 pt-12  bg-gray-50 rounded-lg">
-
-                        <div class="">
-                            <img
-                                  src="/images/peter_1024x1276.jpg"
-                                  alt=""
-                                  sizes="(min-width: 256px) 32rem, 20rem"
-                                  class="rounded-2xl  object-cover "
-                            />
-                        </div>
-
-                    <div class="lg:pl-8 pt-12 flex">
-                        <ul v-for="navLink in navLinks"
-                            :key="navLink.name">
-
-                            <span class="text-teal-500  float-left pr-4">
-                                <a :href="navLink.href"
-                                   target=”_blank”
-                                class="pl-2">
-                                       <component
-                                             :is="navLink.icon"
-                                                  class="h-6 float-left"
-                                                  aria-hidden="true">
-
-                                       </component>
-                                    {{ navLink.name }}
-                                </a>
-                            </span>
-
-                            <!--
-                            <li>
-                                <a
-                                      href="mailto:peter.stone@agapanthus-consulting.com"
-                                      icon={MailIcon}
-                                      class="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
-                                >
-                                    peter.stone@agapanthus-consulting.com
-                                </a>
-                            </li>
-                            -->
-
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <Footerbar/>
-</template>
-
-<script setup>
-
+<script setup lang="ts">
 import Navbar from "../../components/layout/Navbar.vue";
 import {defineComponent, h} from 'vue'
 import Footerbar from "../../components/layout/Footerbar.vue";
-
 const navLinks = [
     {
         name: 'FaceBook',
@@ -143,7 +40,103 @@ const navLinks = [
     },
 ]
 </script>
+<template>
+    <Navbar/>
+    <div class="bg-black bg-black pt-10 sm:pt-16 lg:overflow-hidden lg:pt-8 lg:pb-14">
+        <div class="mx-auto max-w-7xl lg:px-8">
+            <div class=" mt-4 bg-white lg:mx-auto lg:grid grid-cols-2  lg:grid-flow-col-dense lg:grid-cols-2 rounded-lg  ">
+                <div class="px-8 col-span-1 bg-white my-8 rounded-lg">
+                    <div class="lg:order-first lg:row-span-2 mt-4">
+                        <h1 class="text-4xl font-bold tracking-tight text-teal-800  sm:text-5xl">
+                            I’m Peter and I live in Cheshire, where I run my web design business.
+                        </h1>
+                        <div class="mt-12 space-y-7 text-base text-gray-500 sm:text-xl lg:text-lg xl:text-xl">
+                            <div class="">
+                                I started my web design and development business, <span class="font-medium text-cyan-600">Agapanthus Consulting</span>,
+                                in 2016 after spending a little over 30 years working in the IT Services industry, largely in and around large scale
+                                business transformation programmes.
+                                <div class="text-sm mt-2 text-teal-700 ">(If you're interested in
+                                    finding
+                                    out more about my earlier career then check out my
+                                    <a
+                                          href="https://www.linkedin.com/in/peter-stone-3a58762"
+                                          target=”_blank”
+                                          class="font-bold text-cyan-600 hover:text-cyan-400"
+                                    >LinkedIn
+                                    </a> profile for more information).
+                                </div>
+                            </div>
+                            <p class="">
+                                I now work predominantly with small businesses that are looking to
+                                create an integrated digital footprint across
+                                their website and digital marketing channels.
+                            </p>
+                            <p class="">
+                                I love working with my clients. Each business is unique and trying to understand
+                                what it does, where the client is trying to take it and the issues they
+                                are wrestling with can be interesting, challenging and exciting.
+                            </p>
+                            <p>I enjoy trying to come up with innovative ways to use technology
+                                as part of these transformations and helping clients get a consistent presentation of
+                                their brand across their various marketing activities.
+                            </p>
+                            <p class="">
+                                When I'm not working, I enjoy taking in the countryside around
+                                the village where I live - particularly when a visit to a pub or cafe is involved! I enjoy
+                                cycling and when I get the chance, sailing is also a firm favourite. And if the weather's not so good
+                                then I enjoy reading, playing the guitar and cooking - though not necessarily all
+                                at the same time!
+                            </p>
+                        </div>
+                    </div>
 
-<style scoped>
+                </div>
+                <div class="px-24 col-span-1 pt-12  bg-gray-50 rounded-lg">
 
-</style>
+                    <div class="">
+                        <img
+                              src="/images/peter_1024x1276.jpg"
+                              alt=""
+                              sizes="(min-width: 256px) 32rem, 20rem"
+                              class="rounded-2xl  object-cover "
+                        />
+                    </div>
+
+                    <div class="lg:pl-8 pt-12 flex">
+                        <ul v-for="navLink in navLinks"
+                            :key="navLink.name">
+
+                            <div class="text-teal-500  float-left pr-4">
+                                <a :href="navLink.href"
+                                   target=”_blank”
+                                   class="pl-2">
+                                       <component
+                                             :is="navLink.icon"
+                                             class="h-6 float-left"
+                                             aria-hidden="true">
+
+                                       </component>
+                                    {{ navLink.name }}
+                                </a>
+                            </div>
+
+                            <!--
+                            <li>
+                                <a
+                                      href="mailto:peter.stone@agapanthus-consulting.com"
+                                      icon={MailIcon}
+                                      class="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
+                                >
+                                    peter.stone@agapanthus-consulting.com
+                                </a>
+                            </li>
+                            -->
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <Footerbar/>
+</template>

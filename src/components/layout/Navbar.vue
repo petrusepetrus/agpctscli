@@ -1,3 +1,166 @@
+<script setup lang="ts">
+/* Overview
+-------------------------------------------------------------------------------
+UserReview enables the management of a selected Enquiry
+-------------------------------------------------------------------------------*/
+/*===============================================================================*/
+/* Imports
+/*===============================================================================*/
+/*-------------------------------------------------------------------------------*/
+/* Vue
+/*-------------------------------------------------------------------------------*/
+
+/*-------------------------------------------------------------------------------*/
+/* Router
+/*-------------------------------------------------------------------------------*/
+import {useRouter} from "vue-router";
+/*-------------------------------------------------------------------------------*/
+/* Components
+/*-------------------------------------------------------------------------------*/
+import {
+    Popover,
+    PopoverButton,
+    PopoverPanel,
+    Menu,
+    MenuItems,
+    MenuButton,
+    MenuItem,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel
+} from '@headlessui/vue'
+import {
+    Bars3Icon,
+    BellIcon,
+    XMarkIcon,
+} from '@heroicons/vue/24/outline'
+/*-------------------------------------------------------------------------------*/
+/* Services and Utilities
+/*-------------------------------------------------------------------------------*/
+import useAuthService from "../../services/useAuthService.js";
+/*-------------------------------------------------------------------------------*/
+/* Stores
+/*-------------------------------------------------------------------------------*/
+import {storeToRefs} from 'pinia'
+import {useAuthStore} from "../../stores/AuthStore.js";
+/*-------------------------------------------------------------------------------*/
+/* Validation
+/*-------------------------------------------------------------------------------*/
+
+/*===============================================================================*/
+/* Props
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Variable Declaration and Initialisation
+/*===============================================================================*/
+const authStore = useAuthStore()
+const {user, authenticated, verified, userRoles} = storeToRefs(authStore)
+const router = useRouter()
+const navigation = [
+    {
+        name: 'Home',
+        href: '/',
+        authenticated: false,
+        roles: [
+            'public'
+        ]
+    },
+    {
+        name: 'About Me',
+        href: '/about-me',
+        authenticated: false,
+        roles: [
+            'public'
+        ]
+    },
+    {
+        name: 'Contact Me Now',
+        href: '/contact-me',
+        authenticated: false,
+        roles: [
+            'public'
+        ]
+    },
+    {
+        name: 'Enquiries',
+        href: '/enquiries',
+        authenticated: true,
+        roles: [
+            'super admin',
+            'admin'
+
+        ]
+    },
+    {
+        name: 'Users',
+        href: '/users',
+        authenticated: true,
+        roles: [
+            'super admin',
+            'admin'
+
+        ]
+    },
+]
+/*===============================================================================*/
+/* Emits
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Watches
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Lifecycle Hooks
+/*===============================================================================*/
+
+/*===============================================================================*/
+/* Functions
+/*===============================================================================*/
+const {logout} = useAuthService()
+const logUserOut = async () => {
+    /*
+    ----------------------------------------------------------------------------
+    log active user out of system when requested
+    ----------------------------------------------------------------------------
+     */
+    try {
+        await logout()
+        await router.push({name: 'home'})
+    } catch (e) {
+        //console.log(e)
+    }
+
+}
+
+const checkRoles = (permittedRoles) => {
+    /*
+    ----------------------------------------------------------------------------
+        Inspect the navigation items and determine if, based on the user roles,
+        whether it should be displayed for that particular user.
+    ----------------------------------------------------------------------------
+    */
+    //console.log(userRoles.value)
+    for (let x = 0; x < permittedRoles.length; x++) {
+        //console.log(permittedRoles)
+        //console.log(permittedRoles[x])
+        let permittedRoleName = permittedRoles[x]
+        //console.log(permittedRoleName)
+        for (let i = 0; i < userRoles.value.length; i++) {
+            //console.log(userRoles.value[i].name + " " + permittedRoleName)
+            if (userRoles.value[i].name === permittedRoleName || permittedRoleName === "Public") {
+                //console.log("found it")
+                return true
+            } else {
+                //console.log("missed it")
+            }
+        }
+    }
+    //console.log("nope")
+    return false
+}
+</script>
 <template>
     <Disclosure v-slot="{ open }" as="nav" class="bg-black shadow">
         <div class="bg-black pt-6">
@@ -38,7 +201,6 @@
                         </div>
                     </div>
                 </div>
-
                 <button
                       v-if="authenticated"
                       type="button"
@@ -157,188 +319,5 @@
                 </div>
             </div>
         </DisclosurePanel>
-
     </Disclosure>
-
 </template>
-
-
-<script setup>
-/*
-<div className="-mr-2 flex items-center md:hidden">
-    <PopoverButton
-          class="focus-ring-inset inline-flex items-center justify-center rounded-md bg-black p-2 text-gray-400 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white">
-        <span className="sr-only">Open main menu</span>
-        <Bars3Icon class="h-6 w-6" aria-hidden="true"/>
-    </PopoverButton>
-</div>
-*/
-
-/*
-<transition enter-active-class="duration-150 ease-out" enter-from-class="opacity-0 scale-95"
-            enter-to-class="opacity-100 scale-100" leave-active-class="duration-100 ease-in"
-            leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-    <PopoverPanel focus class="absolute inset-x-0 top-0 origin-top transform p-2 transition md:hidden">
-        <div class="overflow-hidden rounded-lg bg-white shadow-md ring-1 ring-black ring-opacity-5">
-            <div class="flex items-center justify-between px-5 pt-4">
-                <div>
-                    <img class="h-8 w-auto"
-                         src="https://tailwindui.com/img/logos/mark.svg?from-color=teal&from-shade=500&to-color=cyan&to-shade=600&toShade=600"
-                         alt=""/>
-                </div>
-                <div class="-mr-2">
-                    <PopoverButton
-                          class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-600">
-                        <span class="sr-only">Close menu</span>
-                        <XMarkIcon class="h-6 w-6" aria-hidden="true"/>
-                    </PopoverButton>
-                </div>
-            </div>
-            <div class="pt-5 pb-6">
-                <div class="space-y-1 px-2">
-                    <div v-for="item in navigation"
-                    :key="item.name"
-                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
-
-                    <router-link
-                    :active-class="'border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'"
-                    :class="'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium'"
-                    to={{item.href}}
-                    >
-                    {{ item.name }}
-                </router-link>
-            </div>
-
-        </div>
-        <div class="mt-6 px-5">
-            <a href="#"
-               class="block w-full rounded-md bg-gradient-to-r from-teal-500 to-cyan-600 py-3 px-4 text-center font-medium text-white shadow hover:from-teal-600 hover:to-cyan-700">Start
-                free trial</a>
-        </div>
-        <div class="mt-6 px-5">
-            <p class="text-center text-base font-medium text-gray-500">Existing customer? <a href="#"
-                                                                                             class="text-gray-900 hover:underline">Login</a>
-            </p>
-        </div>
-    </div>
-</div>
-</PopoverPanel>
-</transition>
-*/
-import {
-    Popover,
-    PopoverButton,
-    PopoverPanel,
-    Menu,
-    MenuItems,
-    MenuButton,
-    MenuItem,
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel
-} from '@headlessui/vue'
-import {
-    Bars3Icon,
-    BellIcon,
-    XMarkIcon,
-} from '@heroicons/vue/24/outline'
-import {storeToRefs} from 'pinia'
-import useAuthService from "../../services/useAuthService.js";
-import {useAuthStore} from "../../stores/AuthStore.js";
-import {useRoute, useRouter} from "vue-router";
-
-const navigation = [
-    {
-        name: 'Home',
-        href: '/',
-        authenticated: false,
-        roles: [
-            'public'
-        ]
-    },
-    {
-        name: 'About Me',
-        href: '/about-me',
-        authenticated: false,
-        roles: [
-            'public'
-        ]
-    },
-    {
-        name: 'Contact Me Now',
-        href: '/contact-me',
-        authenticated: false,
-        roles: [
-            'public'
-        ]
-    },
-    {
-        name: 'Enquiries',
-        href: '/enquiries',
-        authenticated: true,
-        roles: [
-            'super admin',
-            'admin'
-
-        ]
-    },
-    {
-        name: 'Users',
-        href: '/users',
-        authenticated: true,
-        roles: [
-            'super admin',
-            'admin'
-
-        ]
-    },
-
-]
-
-const authStore = useAuthStore()
-//const {logout,getUser:user,getAuthenticated:authenticated,getVerified:verified}=useAuth()
-const {user, authenticated, verified, userRoles} = storeToRefs(authStore)
-const {logout} = useAuthService()
-const router = useRouter()
-
-const logUserOut = async () => {
-    try {
-        await logout()
-        await router.push({name: 'home'})
-    } catch (e) {
-        //console.log(e)
-    }
-
-}
-/*
-----------------------------------------------------------------------------
-    Inspect the navigation items and determine if, based on the user roles,
-    whether it should be displayed for that particular user.
-----------------------------------------------------------------------------
-*/
-const checkRoles = (permittedRoles) => {
-
-    //console.log(userRoles.value)
-    for (let x = 0; x < permittedRoles.length; x++) {
-        //console.log(permittedRoles)
-        //console.log(permittedRoles[x])
-        let permittedRoleName = permittedRoles[x]
-        //console.log(permittedRoleName)
-        for (let i = 0; i < userRoles.value.length; i++) {
-            //console.log(userRoles.value[i].name + " " + permittedRoleName)
-            if (userRoles.value[i].name === permittedRoleName || permittedRoleName === "Public") {
-                //console.log("found it")
-                return true
-            } else {
-                //console.log("missed it")
-            }
-        }
-    }
-    //console.log("nope")
-    return false
-}
-</script>
-
-<style scoped>
-
-</style>

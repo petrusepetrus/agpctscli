@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import NavBar from "/src/components/layout/Navbar.vue"
+import Footerbar from "../../components/layout/Footerbar.vue";
+window.scrollTo({ top: 0, behavior: "smooth" });
+</script>
 <template>
     <div class="bg-black min-h-screen">
         <NavBar></NavBar>
@@ -390,13 +395,3 @@
     <!-- / the end of articles -->
 
 </template>
-
-<script setup>
-import NavBar from "/src/components/layout/Navbar.vue"
-import Footerbar from "../../components/layout/Footerbar.vue";
-window.scrollTo({ top: 0, behavior: "smooth" });
-</script>
-
-<style scoped>
-
-</style>
