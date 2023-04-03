@@ -150,7 +150,14 @@ const saveEnquiry = async () => {
         errorMessage.description = null
         flgSubmissionSuccessful.value = true
         flgIsSubmitting.value = false
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        /**
+         * To Do
+         * at the moment the behaviour:smooth CSS argument does not
+         * work in Safari so has been omitted in the code below. Need
+         * to find a fix for this in the longer term
+         * window.scrollTo({ top: -1,left:0, behaviour:smooth });
+         */
+        window.scrollTo({ top: 0,left:0 });
         setTimeout(() => {
                   //flgSubmissionSuccessful.value = false
                   router.push({name: "home"})

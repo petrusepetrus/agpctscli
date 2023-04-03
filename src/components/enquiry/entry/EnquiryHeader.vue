@@ -404,6 +404,8 @@ const validatePhoneNumber = (phoneNumber, country, ISOCountryCode, phoneType) =>
                 <BaseSelect
                       v-model="phone_type"
                       label="Phone Type"
+                      value="'undefined'"
+                      :prompt-option="'Please Select The Phone Number Type'"
                       :options="phone_types"
                       :required="true"
                       :disabled="props.disabled"

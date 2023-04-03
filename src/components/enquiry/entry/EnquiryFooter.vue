@@ -39,22 +39,17 @@ import {boolean} from 'yup'
 /*===============================================================================*/
 /* Variable Declaration and Initialisation
 /*===============================================================================*/
-interface FormValues{
-    mailing_list:boolean,
-    terms_and_conditions:boolean
-}
 const { executeRecaptcha, recaptchaLoaded } = useReCaptcha()
 const route = useRoute();
 //const mailing_list = (null)
 
-let formValues:FormValues = {
+let formValues = {
     mailing_list:false,
     terms_and_conditions:false
 }
 
 const validationSchema = object({
     terms_and_conditions: boolean().required('Please read and accept our data usage terms'),
-    mailing_list:boolean()
 })
 const {validate, errors, setFieldError} = useForm({
     validationSchema
@@ -121,7 +116,7 @@ const recaptcha = async () => {
             <fieldset class="">
                 <div class="mt-4 space-y-4">
                     <BaseCheckbox
-                          v-model="mailing_list "
+                          v-model="mailing_list"
                           name="mailing_list"
                           label="Mailing List"
                           label-description="Keep up to date with news from me."
