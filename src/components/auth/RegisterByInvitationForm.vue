@@ -37,7 +37,7 @@ import useErrorService from "../../services/useErrorService.js";
 /*-------------------------------------------------------------------------------*/
 import {object, string, ref as yref} from "yup";
 import {useField, useForm} from "vee-validate";
-import useMiscService from "../../services/misc/useMiscService.js";
+import useMiscService from "../../services/useMiscService.js";
 /*===============================================================================*/
 /* Props
 /*===============================================================================*/

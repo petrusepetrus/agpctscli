@@ -11,7 +11,7 @@ selection.
 /*-------------------------------------------------------------------------------*/
 /* Vue
 /*-------------------------------------------------------------------------------*/
-import {ref,reactive} from 'vue'
+import {ref,reactive, watch} from 'vue'
 /*-------------------------------------------------------------------------------*/
 /* Router
 /*-------------------------------------------------------------------------------*/
@@ -30,11 +30,11 @@ import EnquirySomethingElseCard from "../../components/enquiry/entry/EnquirySome
 import EnquiryFooter from "../../components/enquiry/entry/EnquiryFooter.vue"
 import EnquiryConfirmation from "../../components/enquiry/entry/EnquiryConfirmation.vue";
 import Navbar2 from "../../components/layout/Navbar.vue";
-import {PhoneIcon, EnvelopeIcon} from "@heroicons/vue/24/solid/"
+import {PhoneIcon, EnvelopeIcon} from "@heroicons/vue/24/solid"
 /*-------------------------------------------------------------------------------*/
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
+import useMiscService from "../../services/useMiscService.js";
 import useErrorService from "../../services/useErrorService.js";
 /*-------------------------------------------------------------------------------*/
 /* Stores
@@ -71,6 +71,7 @@ const enquiryWebsiteMaintenanceCard = ref(null)
 const enquirySEOCard = ref(null)
 const enquirySomethingElseCard = ref(null)
 const enquiryFooter = ref(null)
+const errorMessageBlock=ref(null)
 
 let enquiryType = ref('nought')
 let enquirySelected = ref(false)
@@ -86,9 +87,33 @@ const {errorMessageHandler} = useErrorService()
 /*===============================================================================*/
 
 /*===============================================================================*/
+/* Watchers
+/*===============================================================================*/
+/*
+Detecting whether the error message block has been mounted in the DOM and
+if so, move focus to it so that user can see a problem has been found.
+Watch the error message block to see if it has changed
+If it has and there is some value in the errorMessage title then we have found an
+error
+If this is the case then we need to scroll the screen down as far as the bottom
+of the error message to make sure it is visible in the
+ */
+watch(errorMessageBlock,(newValue,oldValue)=> {
+          //console.log(newValue)
+          if (newValue !== null) {
+              //console.log(errorMessageBlock.value.$el.offsetTop)
+              //console.log(errorMessageBlock.value.$el.clientHeight)
+              let position=errorMessageBlock.value.$el.offsetTop + errorMessageBlock.value.$el.clientHeight
+              //console.log(position)
+              window.scrollTo({ top: position });
+          }
+      }
+)
+/*===============================================================================*/
 /* Functions
 /*===============================================================================*/
 const onSubmit = async (e) => {
+    errorMessage.title=""
     e.preventDefault
     flgIsSubmitting.value = true
     let formsToValidate = []
@@ -136,10 +161,11 @@ const onSubmit = async (e) => {
             saveEnquiry()
         } else {
             errorMessage.title = "Oops - something doesn't look right."
-            errorMessage.description = "Please check that all the fields highlighted with a red asterisk are present, that " +
-                  "there are no error messages showing  and then give it another go."
+            errorMessage.description = "Please check that all the fields highlighted with a red asterisk are filled in, that " +
+                  "there are no error messages showing and then give it another go."
             //console.log("failed")
             flgIsSubmitting.value = false
+
         }
     })
 }
@@ -298,11 +324,13 @@ const changeEnquiryType = (newEnquiryType) => {
                                   @click="onSubmit($event)">
                             </BaseButton>
                         </div>
-                        <div class="mt-6 col-span-2 ">
+                        <div class="mt-6 col-span-2" >
                             <BaseErrorMessage
                                   v-if="errorMessage.title"
                                   :error-description=errorMessage.description
-                                  :error-title=errorMessage.title>
+                                  :error-title=errorMessage.title
+                                  ref="errorMessageBlock"
+                            >
                             </BaseErrorMessage>
                         </div>
                     </div>

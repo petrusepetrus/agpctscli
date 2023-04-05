@@ -1,5 +1,5 @@
 import axios from "axios";
-import errorHandler from "../api/apiErrorHandler.js";
+import errorHandler from "./api/apiErrorHandler.js";
 
 export default function useMiscService() {
     /*

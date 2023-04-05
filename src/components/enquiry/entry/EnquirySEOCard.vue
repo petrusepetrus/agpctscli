@@ -104,7 +104,7 @@ async function validateForm() {
         formValues.enquiry = enquiry.value
 
     } else {
-        console.log("SEO failed")
+        //console.log("SEO failed")
     }
     return {
         valid,

@@ -23,7 +23,7 @@ import BaseSpinner from "../../ui/BaseSpinner.vue";
 
 /* Stores */
 /* Services */
-import useMiscService from "../../../services/misc/useMiscService.js";
+import useMiscService from "../../../services/useMiscService.js";
 import useErrorService from "../../../services/useErrorService.js";
 
 /* Validation */

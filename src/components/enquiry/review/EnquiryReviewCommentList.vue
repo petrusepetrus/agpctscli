@@ -25,7 +25,7 @@ import BaseInformationMessage from "../../ui/BaseInformationMessage.vue";
 /*-------------------------------------------------------------------------------*/
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
-import useMiscService from "../../../services/misc/useMiscService.js";
+import useMiscService from "../../../services/useMiscService.js";
 import useErrorService from "../../../services/useErrorService.js";
 import moment from 'moment';
 /*-------------------------------------------------------------------------------*/

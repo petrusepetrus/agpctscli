@@ -147,7 +147,7 @@ import BaseSpinner from "../ui/BaseSpinner.vue";
 /*
 API
 */
-import useMiscService from "../../services/misc/useMiscService.js";
+import useMiscService from "../../services/useMiscService.js";
 import useUserService from "../../services/useUserService.js";
 import useErrorService from "../../services/useErrorService.js";
 //import {isValidPhoneNumber} from "libphonenumber-js";

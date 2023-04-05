@@ -28,7 +28,7 @@ import BaseInformationMessage from "../../ui/BaseInformationMessage.vue";
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
 import useErrorService from "../../../services/useErrorService.js";
-import useMiscService from "../../../services/misc/useMiscService.js";
+import useMiscService from "../../../services/useMiscService.js";
 import {testIfPromise} from "../../../utils/GeneralUtilities.js";
 /*-------------------------------------------------------------------------------*/
 /* Stores

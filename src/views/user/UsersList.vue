@@ -28,7 +28,7 @@ import {CheckCircleIcon, MagnifyingGlassIcon} from '@heroicons/vue/24/solid'
 /*-------------------------------------------------------------------------------*/
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
+import useMiscService from "../../services/useMiscService.js";
 import useUserService from "../../services/useUserService.js";
 import {testIfPromise} from "../../utils/GeneralUtilities.js"
 import Navbar from "../../components/layout/Navbar.vue";

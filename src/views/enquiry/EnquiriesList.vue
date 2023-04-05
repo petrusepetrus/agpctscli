@@ -28,7 +28,7 @@ import BaseInput from "../../components/ui/BaseInput.vue";
 /*-------------------------------------------------------------------------------*/
 /* Services and Utilities
 /*-------------------------------------------------------------------------------*/
-import useMiscService from "../../services/misc/useMiscService.js";
+import useMiscService from "../../services/useMiscService.js";
 import {testIfPromise} from "../../utils/GeneralUtilities.js"
 import moment from "moment";
 
