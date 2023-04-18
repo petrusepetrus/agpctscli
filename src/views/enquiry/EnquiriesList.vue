@@ -234,9 +234,11 @@ const getEnquiriesList = async () => {
     */
     flgIsLoading.value = true
     enquiriesFound.value = false
+    warningMessage.title=""
+    warningMessage.description=""
+    errorMessage.title=""
+    errorMessage.description=""
     try {
-        warningMessage.title=""
-        warningMessage.description=""
         let response = await getEnquiries(queryParams)
         if (response.data.length === 0) {
             enquiriesFound.value = false
@@ -501,7 +503,7 @@ const formatDate=(date)=>{
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-black max-w-lg  lg:max-w-xs shrink bg-white shadow sm:rounded-lg p-2 col-span-1">
+                        <div class="bg-black max-w-lg  lg:max-w-xs shrink shadow sm:rounded-lg p-2 col-span-1">
                             <h2 class="text-lg leading-6 font-medium text-teal-300">Filter on enquiry status</h2>
                             <div class="mt-2 mb-2 max-w-xl text-sm text-gray-400">
                                 <p>Select one or more enquiry statuses you are interested in or leave blank for
@@ -639,6 +641,7 @@ const formatDate=(date)=>{
                           :from="paginationData.from"
                           :total="paginationData.total"
                           :links="paginationData.links"
+
                           @new-page="pageChange"
                     >
                     </BasePagination>

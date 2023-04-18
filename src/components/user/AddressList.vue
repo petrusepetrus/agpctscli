@@ -141,6 +141,7 @@
             {{ warningMessage.text }}
         </BaseWarningMessage>
     </div>
+    {{errorMessage}}
     <div v-if="errorMessage.title" class="mt-6 lg:col-span-1 md:col-span-1 sm:col-span-4">
         <BaseErrorMessage
               v-if="errorMessage.title"
@@ -224,6 +225,7 @@ const deleteAddress = async (userAddressToDelete) => {
      the 'refresh' event is emitted which triggers a refresh of the user address
      in the userStore and the UserAddressCards
      */
+    console.log(userAddressToDelete)
     try {
         await deleteUserAddress(userID, userAddressToDelete.id)
         await refreshAddresses()
